@@ -210,7 +210,7 @@
             background: white;
             border-radius: 12px;
             padding: 16px 24px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             cursor: pointer;
             display: flex;
@@ -233,6 +233,7 @@
             overflow: hidden;
             transition: all 0.4s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 0;
         }
         .create-form-body.open {
             padding: 24px;
@@ -283,6 +284,14 @@
         .create-form-body .btn-submit:hover { background: #e65100; }
         .create-form-body .form-full { grid-column: 1 / -1; }
 
+        /* 学生创建表单按钮颜色 */
+        .create-form-body.student .btn-submit {
+            background: #1a73e8;
+        }
+        .create-form-body.student .btn-submit:hover {
+            background: #0d47a1;
+        }
+
         .data-card {
             display: flex;
             justify-content: space-between;
@@ -297,6 +306,13 @@
         .data-card:last-child { margin-bottom: 0; }
         .data-card .info strong { font-size: 15px; }
         .data-card .info p { font-size: 13px; color: #999; margin: 4px 0 0 0; }
+
+        .create-section {
+            margin-bottom: 20px;
+        }
+        .create-section:last-child {
+            margin-bottom: 0;
+        }
 
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
@@ -353,94 +369,66 @@
         </div>
 
         <!-- ===== 创建教师（折叠） ===== -->
-        <div class="create-form-toggle" onclick="toggleCreateForm()">
-            <span style="font-weight: 500;">➕ 管理员创建教师账号（免审核）</span>
-            <span class="arrow" id="createArrow">▼</span>
-        </div>
-        <div class="create-form-body" id="createFormBody">
-            <div id="createMsg" class="msg"></div>
-            <form id="createTeacherForm" onsubmit="handleCreateTeacher(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>工号 *</label>
-                        <input type="text" id="createUsername" placeholder="请输入工号" required>
+        <div class="create-section">
+            <div class="create-form-toggle" onclick="toggleCreateForm('teacher')">
+                <span style="font-weight: 500;">➕ 管理员创建教师账号（免审核）</span>
+                <span class="arrow" id="teacherArrow">▼</span>
+            </div>
+            <div class="create-form-body" id="teacherFormBody">
+                <div id="createMsg" class="msg"></div>
+                <form id="createTeacherForm" onsubmit="handleCreateTeacher(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>工号 *</label>
+                            <input type="text" id="createUsername" placeholder="请输入工号" required>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" id="createName" placeholder="请输入姓名" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>密码 *</label>
+                            <input type="password" id="createPassword" placeholder="请设置密码（至少6位）" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>手机号 *</label>
+                            <input type="tel" id="createPhone" placeholder="请输入手机号" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别 *</label>
+                            <select id="createGender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>职称 *</label>
+                            <input type="text" id="createTitle" placeholder="如：高级心理咨询师" required>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label>姓名 *</label>
-                        <input type="text" id="createName" placeholder="请输入姓名" required>
+                        <label>专业领域 *</label>
+                        <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>密码 *</label>
-                        <input type="password" id="createPassword" placeholder="请设置密码（至少6位）" required minlength="6">
+                    <div class="form-full" style="text-align: right; margin-top: 8px;">
+                        <button type="submit" class="btn-submit" id="createSubmitBtn">创建教师账号</button>
                     </div>
-                    <div class="form-group">
-                        <label>手机号 *</label>
-                        <input type="tel" id="createPhone" placeholder="请输入手机号" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>性别 *</label>
-                        <select id="createGender" required>
-                            <option value="">请选择</option>
-                            <option value="男">男</option>
-                            <option value="女">女</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>职称 *</label>
-                        <input type="text" id="createTitle" placeholder="如：高级心理咨询师" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>专业领域 *</label>
-                    <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
-                </div>
-                <div class="form-full" style="text-align: right; margin-top: 8px;">
-                    <button type="submit" class="btn-submit" id="createSubmitBtn">创建教师账号</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- ===== Tab 栏 ===== -->
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
-            <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
-            <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
-            <button class="tab-btn" onclick="switchTab('create_student')">👤 创建学生</button>
-            <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
-        </div>
-
-        <!-- ===== Tab: 待审核教师 ===== -->
-        <div id="tab-pending" class="tab-content active">
-            <div class="table-wrap">
-                <h3>⏳ 待审核教师 <span class="count" id="pendingCount"></span></h3>
-                <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>加载中...</p></div></div>
+                </form>
             </div>
         </div>
 
-        <!-- ===== Tab: 教师列表 ===== -->
-        <div id="tab-teachers" class="tab-content">
-            <div class="table-wrap">
-                <h3>👨‍🏫 所有教师 <span class="count" id="teachersCount"></span></h3>
-                <div id="teacherList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+        <!-- ===== 创建学生（折叠） ===== -->
+        <div class="create-section">
+            <div class="create-form-toggle" onclick="toggleCreateForm('student')">
+                <span style="font-weight: 500;">🎓 管理员创建学生账号（免注册）</span>
+                <span class="arrow" id="studentArrow">▼</span>
             </div>
-        </div>
-
-        <!-- ===== Tab: 学生列表 ===== -->
-        <div id="tab-students" class="tab-content">
-            <div class="table-wrap">
-                <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
-                <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
-            </div>
-        </div>
-
-        <!-- ===== Tab: 创建学生 ===== -->
-        <div id="tab-create_student" class="tab-content">
-            <div class="table-wrap">
-                <h3>👤 管理员创建学生账号</h3>
+            <div class="create-form-body student" id="studentFormBody">
                 <div id="createStudentMsg" class="msg"></div>
                 <form id="createStudentForm" onsubmit="handleCreateStudent(event)">
                     <div class="form-row">
@@ -482,9 +470,41 @@
                         <input type="number" id="cs_age" placeholder="请输入年龄" required min="6" max="30">
                     </div>
                     <div class="form-full" style="text-align: right; margin-top: 8px;">
-                        <button type="submit" class="btn-submit" style="background:#1a73e8;" id="csSubmitBtn">创建学生账号</button>
+                        <button type="submit" class="btn-submit" id="csSubmitBtn">创建学生账号</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- ===== Tab 栏 ===== -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
+            <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
+            <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
+            <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
+        </div>
+
+        <!-- ===== Tab: 待审核教师 ===== -->
+        <div id="tab-pending" class="tab-content active">
+            <div class="table-wrap">
+                <h3>⏳ 待审核教师 <span class="count" id="pendingCount"></span></h3>
+                <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 教师列表 ===== -->
+        <div id="tab-teachers" class="tab-content">
+            <div class="table-wrap">
+                <h3>👨‍🏫 所有教师 <span class="count" id="teachersCount"></span></h3>
+                <div id="teacherList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 学生列表 ===== -->
+        <div id="tab-students" class="tab-content">
+            <div class="table-wrap">
+                <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
+                <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
             </div>
         </div>
 
@@ -540,11 +560,18 @@
         }
 
         // ===== 折叠创建表单 =====
-        function toggleCreateForm() {
-            const body = document.getElementById('createFormBody');
-            const arrow = document.getElementById('createArrow');
-            body.classList.toggle('open');
-            arrow.classList.toggle('open');
+        function toggleCreateForm(type) {
+            if (type === 'teacher') {
+                const body = document.getElementById('teacherFormBody');
+                const arrow = document.getElementById('teacherArrow');
+                body.classList.toggle('open');
+                arrow.classList.toggle('open');
+            } else if (type === 'student') {
+                const body = document.getElementById('studentFormBody');
+                const arrow = document.getElementById('studentArrow');
+                body.classList.toggle('open');
+                arrow.classList.toggle('open');
+            }
         }
 
         // ===== 加载统计数据 =====
@@ -625,7 +652,7 @@
             }
         }
 
-        // ===== 加载教师列表（含启用/禁用/删除按钮） =====
+        // ===== 加载教师列表 =====
         async function loadTeachers() {
             const container = document.getElementById('teacherList');
             try {
@@ -689,7 +716,7 @@
             }
         }
 
-        // ===== 加载学生列表（含启用/禁用/删除按钮） =====
+        // ===== 加载学生列表 =====
         async function loadStudents() {
             const container = document.getElementById('studentList');
             try {
@@ -814,7 +841,7 @@
             }
         }
 
-        // ===== 删除用户（永久删除） =====
+        // ===== 删除用户 =====
         async function deleteUser(userId) {
             if (!confirm('⚠️ 确认永久删除该用户吗？此操作不可恢复！')) return;
             if (!confirm('再次确认：删除该用户？')) return;
