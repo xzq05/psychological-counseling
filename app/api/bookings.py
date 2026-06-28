@@ -1,8 +1,10 @@
 # app/api/bookings.py
-from fastapi import APIRouter, HTTPException, Request, Form, Query
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, HTTPException, Request, Form, Query, Body
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
 from app.database import get_db
 from app.repositories.booking_repo import BookingRepository
 from app.repositories.user_repo import UserRepository
@@ -11,6 +13,21 @@ from app.services.auth_service import AuthService
 
 router = APIRouter(tags=["预约"])
 templates = Jinja2Templates(directory="templates")
+
+
+# ========== 请求模型 ==========
+class BookingCreateRequest(BaseModel):
+    student_id: str
+    student_name: str
+    student_phone: str
+    student_gender: str
+    student_age: int
+    student_class: str
+    booking_date: str
+    booking_time: str
+    consultation_type: str
+    consultation_detail: Optional[str] = ""
+    teacher_id: Optional[str] = ""
 
 
 def get_booking_service():
@@ -26,7 +43,6 @@ def get_auth_service():
 
 
 # ========== 页面路由 ==========
-
 @router.get("/student", response_class=HTMLResponse)
 async def student_dashboard(request: Request):
     return templates.TemplateResponse("student_dashboard.html", {"request": request})
@@ -43,7 +59,6 @@ async def admin_dashboard(request: Request):
 
 
 # ========== API 路由 ==========
-
 @router.get("/api/teachers/list")
 async def get_teachers_list():
     """获取所有心理老师列表（供学生选择）"""
@@ -52,46 +67,45 @@ async def get_teachers_list():
 
 
 @router.post("/api/bookings")
-async def create_booking(
-        student_id: str = Form(...),
-        student_name: str = Form(...),
-        student_phone: str = Form(...),
-        student_gender: str = Form(...),
-        student_age: int = Form(...),
-        student_class: str = Form(...),
-        booking_date: str = Form(...),
-        booking_time: str = Form(...),
-        consultation_type: str = Form(...),
-        consultation_detail: str = Form(default=""),
-        teacher_id: str = Form(default="")
-):
-    """学生创建预约"""
+async def create_booking(request: BookingCreateRequest):
+    """学生创建预约 - JSON 格式"""
     service = get_booking_service()
 
     data = {
-        "student_id": student_id,
-        "student_name": student_name,
-        "student_phone": student_phone,
-        "student_gender": student_gender,
-        "student_age": student_age,
-        "student_class": student_class,
-        "booking_date": booking_date,
-        "booking_time": booking_time,
-        "consultation_type": consultation_type,
-        "consultation_detail": consultation_detail,
+        "student_id": request.student_id,
+        "student_name": request.student_name,
+        "student_phone": request.student_phone,
+        "student_gender": request.student_gender,
+        "student_age": request.student_age,
+        "student_class": request.student_class,
+        "booking_date": request.booking_date,
+        "booking_time": request.booking_time,
+        "consultation_type": request.consultation_type,
+        "consultation_detail": request.consultation_detail,
         "status": "待确认"
     }
 
     # 如果选择了老师，保存老师信息
-    if teacher_id:
-        data["teacher_id"] = teacher_id
+    if request.teacher_id:
+        data["teacher_id"] = request.teacher_id
         db = get_db()
         repo = UserRepository(db)
-        teacher = await repo.find_by_id(teacher_id)
+        teacher = await repo.find_by_id(request.teacher_id)
         if teacher:
             data["teacher_name"] = teacher.name
 
-    return await service.create_booking(data)
+    result = await service.create_booking(data)
+
+    if not result["success"]:
+        return JSONResponse(
+            status_code=400,
+            content=result
+        )
+
+    return JSONResponse(
+        status_code=200,
+        content=result
+    )
 
 
 @router.get("/api/bookings/student/{student_id}")
@@ -125,17 +139,27 @@ async def get_today_bookings(date: str = Query(..., description="日期 YYYY-MM-
 @router.post("/api/bookings/{booking_id}/confirm")
 async def confirm_booking(
         booking_id: str,
-        teacher_id: str = Form(...),
-        teacher_name: str = Form(...),
-        confirmed_date: str = Form(...),
-        confirmed_time: str = Form(...),
-        room: str = Form(...)
+        request: Request
 ):
-    """教师确认预约"""
-    service = get_booking_service()
-    return await service.confirm_booking(
-        booking_id, teacher_id, teacher_name, confirmed_date, confirmed_time, room
-    )
+    """教师确认预约 - JSON 格式"""
+    try:
+        data = await request.json()
+        teacher_id = data.get("teacher_id")
+        teacher_name = data.get("teacher_name")
+        confirmed_date = data.get("confirmed_date")
+        confirmed_time = data.get("confirmed_time")
+        room = data.get("room")
+
+        service = get_booking_service()
+        result = await service.confirm_booking(
+            booking_id, teacher_id, teacher_name, confirmed_date, confirmed_time, room
+        )
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": f"请求解析错误: {str(e)}"}
+        )
 
 
 @router.post("/api/bookings/{booking_id}/reject")
