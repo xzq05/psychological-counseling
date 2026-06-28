@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生登录 - 心理咨询预约系统</title>
-    <link rel="stylesheet" href="/static/css/style.css">
     <style>
         body {
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
@@ -15,6 +14,7 @@
             align-items: center;
             margin: 0;
             padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .login-container {
             background: white;
@@ -165,27 +165,23 @@
         async function handleLogin(e) {
             e.preventDefault();
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
             const submitBtn = document.getElementById('submitBtn');
 
-            // 隐藏之前的消息
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
 
-            // 禁用按钮
+            if (!username || !password) {
+                errorMsg.textContent = '请输入学号和密码';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.textContent = '登录中...';
-
-            // 构建 JSON 数据
-            const data = {
-                username: username,
-                password: password
-            };
-
-            console.log('登录请求:', data);
 
             try {
                 const response = await fetch('/api/auth/student/login', {
@@ -193,14 +189,12 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({ username, password })
                 });
 
                 const result = await response.json();
-                console.log('服务器响应:', result);
 
                 if (response.ok && result.success) {
-                    // 保存用户信息到 localStorage
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('user_id', result.user_id);
                     localStorage.setItem('user_name', result.name);
@@ -209,6 +203,7 @@
 
                     successMsg.textContent = '✅ 登录成功！正在跳转...';
                     successMsg.style.display = 'block';
+                    submitBtn.textContent = '登录成功';
 
                     setTimeout(() => {
                         window.location.href = '/student';
@@ -220,7 +215,6 @@
                     submitBtn.textContent = '登 录';
                 }
             } catch (err) {
-                console.error('网络错误:', err);
                 errorMsg.textContent = '网络错误，请稍后重试';
                 errorMsg.style.display = 'block';
                 submitBtn.disabled = false;

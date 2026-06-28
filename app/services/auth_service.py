@@ -107,7 +107,6 @@ class AuthService:
         elif user.role == "teacher":
             if user.gender != gender:
                 return {"success": False, "message": "性别不匹配"}
-            # 教师使用职称作为验证字段
             if user.teacher_title != class_name:
                 return {"success": False, "message": "职称不匹配"}
         else:

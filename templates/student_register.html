@@ -206,18 +206,15 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '注册中...';
 
-            // 收集表单数据为 JSON
             const data = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                student_class: document.getElementById('student_class').value,
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                name: document.getElementById('name').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                student_class: document.getElementById('student_class').value.trim(),
                 age: parseInt(document.getElementById('age').value),
                 gender: document.getElementById('gender').value
             };
-
-            console.log('注册数据:', data);
 
             try {
                 const response = await fetch('/api/auth/student/register', {
@@ -229,7 +226,6 @@
                 });
 
                 const result = await response.json();
-                console.log('服务器响应:', result);
 
                 if (response.ok && result.success) {
                     msg.className = 'msg msg-success';
@@ -237,7 +233,6 @@
                     msg.style.display = 'block';
                     submitBtn.textContent = '✅ 注册成功';
 
-                    // 清空表单
                     document.getElementById('registerForm').reset();
 
                     setTimeout(() => {
@@ -251,7 +246,6 @@
                     submitBtn.textContent = '注 册';
                 }
             } catch (err) {
-                console.error('网络错误:', err);
                 msg.className = 'msg msg-error';
                 msg.textContent = '❌ 网络错误，请稍后重试';
                 msg.style.display = 'block';
