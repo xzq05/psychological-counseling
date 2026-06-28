@@ -461,6 +461,7 @@
     </div>
 
     <script>
+        // ===== 获取当前用户信息 =====
         const userId = localStorage.getItem('user_id') || '';
         const userName = localStorage.getItem('user_name') || '教师';
         const username = localStorage.getItem('username') || '';
@@ -663,6 +664,7 @@
             document.getElementById('confirmModal').classList.remove('active');
         }
 
+        // ===== 确认预约 =====
         async function handleConfirm(e) {
             e.preventDefault();
             const bookingId = document.getElementById('confirmBookingId').value;
@@ -681,20 +683,28 @@
             }
 
             try {
-                const formData = new FormData();
-                formData.append('teacher_id', teacherId);
-                formData.append('teacher_name', teacherName);
-                formData.append('confirmed_date', confirmedDate);
-                formData.append('confirmed_time', confirmedTime);
-                formData.append('room', room);
+                const data = {
+                    teacher_id: teacherId,
+                    teacher_name: teacherName,
+                    confirmed_date: confirmedDate,
+                    confirmed_time: confirmedTime,
+                    room: room
+                };
+
+                console.log('确认数据:', data);
 
                 const res = await fetch(`/api/bookings/${bookingId}/confirm`, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
-                const data = await res.json();
 
-                if (data.success) {
+                const result = await res.json();
+                console.log('确认响应:', result);
+
+                if (result.success) {
                     modalMsg.className = 'msg msg-success';
                     modalMsg.textContent = '✅ 预约确认成功！';
                     modalMsg.style.display = 'block';
@@ -707,10 +717,11 @@
                     }, 1000);
                 } else {
                     modalMsg.className = 'msg msg-error';
-                    modalMsg.textContent = '❌ ' + (data.message || '确认失败');
+                    modalMsg.textContent = '❌ ' + (result.message || '确认失败');
                     modalMsg.style.display = 'block';
                 }
             } catch (e) {
+                console.error('确认错误:', e);
                 modalMsg.className = 'msg msg-error';
                 modalMsg.textContent = '❌ 网络错误，请重试';
                 modalMsg.style.display = 'block';
