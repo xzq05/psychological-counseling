@@ -206,7 +206,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '注册中...';
 
-            // 收集表单数据为 JSON 对象
+            // 收集表单数据为 JSON
             const data = {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value,
@@ -217,7 +217,7 @@
                 gender: document.getElementById('gender').value
             };
 
-            console.log('提交的数据:', data);
+            console.log('注册数据:', data);
 
             try {
                 const response = await fetch('/api/auth/student/register', {
