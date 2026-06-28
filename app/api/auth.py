@@ -1,7 +1,8 @@
 # app/api/auth.py
-from fastapi import APIRouter, HTTPException, Request, Form
+from fastapi import APIRouter, HTTPException, Request, Form, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from app.database import get_db
 from app.repositories.user_repo import UserRepository
 from app.services.auth_service import AuthService
@@ -15,6 +16,44 @@ def get_auth_service():
     db = get_db()
     repo = UserRepository(db)
     return AuthService(repo)
+
+
+# ========== 请求模型 ==========
+class StudentRegisterRequest(BaseModel):
+    username: str
+    password: str
+    name: str
+    phone: str
+    student_class: str
+    age: int
+    gender: str
+
+
+class TeacherRegisterRequest(BaseModel):
+    username: str
+    password: str
+    name: str
+    phone: str
+    teacher_title: str
+    teacher_specialty: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    username: str
+    phone: str
+    gender: str
+    class_name: str
+
+
+class ChangePasswordRequest(BaseModel):
+    username: str
+    old_password: str
+    new_password: str
 
 
 # ========== 首页 ==========
@@ -35,12 +74,9 @@ async def admin_change_password_page(request: Request):
 
 
 @router.post("/api/auth/admin/login")
-async def admin_login(
-        username: str = Form(...),
-        password: str = Form(...)
-):
+async def admin_login(request: LoginRequest):
     service = get_auth_service()
-    result = await service.login(username, password)
+    result = await service.login(request.username, request.password)
 
     if not result["success"]:
         raise HTTPException(status_code=401, detail=result["message"])
@@ -106,14 +142,11 @@ async def teacher_change_password_page(request: Request):
     return templates.TemplateResponse("teacher_change_password.html", {"request": request})
 
 
-# ========== 学生 API ==========
+# ========== 学生 API（JSON 格式） ==========
 @router.post("/api/auth/student/login")
-async def student_login(
-        username: str = Form(...),
-        password: str = Form(...)
-):
+async def student_login(request: LoginRequest):
     service = get_auth_service()
-    result = await service.login(username, password)
+    result = await service.login(request.username, request.password)
 
     if not result["success"]:
         raise HTTPException(status_code=401, detail=result["message"])
@@ -138,30 +171,21 @@ async def student_login(
 
 
 @router.post("/api/auth/student/register")
-async def register_student(
-        username: str = Form(...),
-        password: str = Form(...),
-        name: str = Form(...),
-        phone: str = Form(...),
-        student_class: str = Form(...),
-        age: int = Form(...),
-        gender: str = Form(...)
-):
-    """学生注册 API"""
+async def register_student(request: StudentRegisterRequest):
+    """学生注册 API - JSON 格式"""
     try:
         service = get_auth_service()
         data = {
-            "username": username,
-            "password": password,
-            "name": name,
-            "phone": phone,
-            "student_class": student_class,
-            "age": age,
-            "gender": gender
+            "username": request.username,
+            "password": request.password,
+            "name": request.name,
+            "phone": request.phone,
+            "student_class": request.student_class,
+            "age": request.age,
+            "gender": request.gender
         }
         result = await service.register_student(data)
 
-        # 返回 JSON 响应
         return JSONResponse(
             status_code=200 if result["success"] else 400,
             content=result
@@ -173,14 +197,11 @@ async def register_student(
         )
 
 
-# ========== 教师 API ==========
+# ========== 教师 API（JSON 格式） ==========
 @router.post("/api/auth/teacher/login")
-async def teacher_login(
-        username: str = Form(...),
-        password: str = Form(...)
-):
+async def teacher_login(request: LoginRequest):
     service = get_auth_service()
-    result = await service.login(username, password)
+    result = await service.login(request.username, request.password)
 
     if not result["success"]:
         raise HTTPException(status_code=401, detail=result["message"])
@@ -205,23 +226,16 @@ async def teacher_login(
 
 
 @router.post("/api/auth/teacher/register")
-async def register_teacher(
-        username: str = Form(...),
-        password: str = Form(...),
-        name: str = Form(...),
-        phone: str = Form(...),
-        teacher_title: str = Form(...),
-        teacher_specialty: str = Form(...)
-):
+async def register_teacher(request: TeacherRegisterRequest):
     try:
         service = get_auth_service()
         data = {
-            "username": username,
-            "password": password,
-            "name": name,
-            "phone": phone,
-            "teacher_title": teacher_title,
-            "teacher_specialty": teacher_specialty
+            "username": request.username,
+            "password": request.password,
+            "name": request.name,
+            "phone": request.phone,
+            "teacher_title": request.teacher_title,
+            "teacher_specialty": request.teacher_specialty
         }
         result = await service.register_teacher(data)
 
@@ -236,32 +250,32 @@ async def register_teacher(
         )
 
 
-# ========== 通用密码重置（通过验证信息） ==========
+# ========== 通用密码重置 ==========
 @router.post("/api/auth/forgot-password")
-async def forgot_password(
-        username: str = Form(...),
-        phone: str = Form(...),
-        gender: str = Form(...),
-        class_name: str = Form(...)
-):
+async def forgot_password(request: ForgotPasswordRequest):
     """通过手机号、性别、班级验证身份，生成临时密码"""
     service = get_auth_service()
-    result = await service.reset_password_by_info(username, phone, gender, class_name)
+    result = await service.reset_password_by_info(
+        request.username,
+        request.phone,
+        request.gender,
+        request.class_name
+    )
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
 
-# ========== 修改密码（需验证旧密码） ==========
+# ========== 修改密码 ==========
 @router.post("/api/auth/change-password")
-async def change_password(
-        username: str = Form(...),
-        old_password: str = Form(...),
-        new_password: str = Form(...)
-):
+async def change_password(request: ChangePasswordRequest):
     """修改密码，需要验证旧密码"""
     service = get_auth_service()
-    result = await service.change_password(username, old_password, new_password)
+    result = await service.change_password(
+        request.username,
+        request.old_password,
+        request.new_password
+    )
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result

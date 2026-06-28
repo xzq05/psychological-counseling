@@ -197,7 +197,6 @@
         async function handleRegister(e) {
             e.preventDefault();
 
-            const form = document.getElementById('registerForm');
             const msg = document.getElementById('msg');
             const submitBtn = document.getElementById('submitBtn');
 
@@ -207,38 +206,46 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '注册中...';
 
-            // 手动构建 FormData（确保所有字段都在）
-            const formData = new FormData(form);
+            // 收集表单数据为 JSON 对象
+            const data = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                student_class: document.getElementById('student_class').value,
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value
+            };
 
-            // 打印调试信息
-            console.log('提交的字段:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
+            console.log('提交的数据:', data);
 
             try {
-                // 使用正确的方式发送请求，不设置 Content-Type
                 const response = await fetch('/api/auth/student/register', {
                     method: 'POST',
-                    body: formData
-                    // 不要手动设置 Content-Type，浏览器会自动处理
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
-                const data = await response.json();
-                console.log('服务器响应:', data);
+                const result = await response.json();
+                console.log('服务器响应:', result);
 
-                if (response.ok && data.success) {
+                if (response.ok && result.success) {
                     msg.className = 'msg msg-success';
-                    msg.textContent = '✅ ' + (data.message || '注册成功！2秒后跳转到登录页...');
+                    msg.textContent = '✅ ' + (result.message || '注册成功！2秒后跳转到登录页...');
                     msg.style.display = 'block';
                     submitBtn.textContent = '✅ 注册成功';
+
+                    // 清空表单
+                    document.getElementById('registerForm').reset();
 
                     setTimeout(() => {
                         window.location.href = '/student/login';
                     }, 2000);
                 } else {
                     msg.className = 'msg msg-error';
-                    msg.textContent = '❌ ' + (data.detail || data.message || '注册失败，请重试');
+                    msg.textContent = '❌ ' + (result.detail || result.message || '注册失败，请重试');
                     msg.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.textContent = '注 册';
