@@ -58,7 +58,7 @@ class UserRepository:
 
     async def find_all_students(self):
         """查找所有学生"""
-        cursor = self.collection.find({"role": "student", "status": "active"})
+        cursor = self.collection.find({"role": "student"})
         users = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
@@ -97,10 +97,15 @@ class UserRepository:
         )
 
     async def delete(self, user_id: str):
+        """软删除（禁用）"""
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"status": "inactive"}}
+            {"$set": {"status": "inactive", "updated_at": datetime.now()}}
         )
+
+    async def delete_permanently(self, user_id: str):
+        """永久删除用户"""
+        await self.collection.delete_one({"_id": ObjectId(user_id)})
 
     async def verify_teacher(self, user_id: str):
         """审核通过教师账号"""

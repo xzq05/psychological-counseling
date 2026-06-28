@@ -12,7 +12,6 @@ class BookingRepository:
     async def create(self, booking: Booking) -> Booking:
         data = booking.model_dump(by_alias=True, exclude={"id"})
         data = {k: v for k, v in data.items() if v is not None}
-        # 自动分配排号
         today = datetime.now().strftime("%Y-%m-%d")
         count = await self.collection.count_documents({"booking_date": today})
         data["queue_number"] = count + 1
@@ -81,8 +80,13 @@ class BookingRepository:
             }}
         )
 
-    async def delete(self, booking_id: str):
+    async def delete_permanently(self, booking_id: str):
+        """永久删除预约"""
         await self.collection.delete_one({"_id": ObjectId(booking_id)})
+
+    async def delete_all(self):
+        """删除所有预约"""
+        await self.collection.delete_many({})
 
     async def get_today_queue_count(self, date_str: str) -> int:
         return await self.collection.count_documents({"booking_date": date_str})
