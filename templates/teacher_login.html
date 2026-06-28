@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教师登录 - 心理咨询预约系统</title>
-    <link rel="stylesheet" href="/static/css/style.css">
     <style>
         body {
             background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
@@ -15,6 +14,7 @@
             align-items: center;
             margin: 0;
             padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .login-container {
             background: white;
@@ -91,6 +91,10 @@
         .btn-submit:hover {
             background: #2e7d32;
         }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .login-footer {
             text-align: center;
             margin-top: 18px;
@@ -106,6 +110,13 @@
         }
         .error-msg {
             color: #d32f2f;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        .success-msg {
+            color: #2e7d32;
             font-size: 13px;
             margin-top: 10px;
             text-align: center;
@@ -136,6 +147,9 @@
             </p>
         </div>
 
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
+
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label>工号</label>
@@ -145,8 +159,7 @@
                 <label>密码</label>
                 <input type="password" id="password" placeholder="请输入密码" required>
             </div>
-            <div id="errorMsg" class="error-msg"></div>
-            <button type="submit" class="btn-submit">登 录</button>
+            <button type="submit" class="btn-submit" id="submitBtn">登 录</button>
         </form>
 
         <div class="login-footer">
@@ -165,42 +178,65 @@
     <script>
         async function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            const submitBtn = document.getElementById('submitBtn');
 
             errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            if (!username || !password) {
+                errorMsg.textContent = '请输入工号和密码';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '登录中...';
 
             try {
-                const formData = new FormData();
-                formData.append('username', username);
-                formData.append('password', password);
-
                 const response = await fetch('/api/auth/teacher/login', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (response.ok && data.success) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user_id', data.user_id);
-                    localStorage.setItem('user_name', data.name);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('user_role', data.role);
-                    if (data.role === 'admin') {
-                        window.location.href = '/admin';
-                    } else {
-                        window.location.href = '/teacher';
-                    }
+                if (response.ok && result.success) {
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user_id', result.user_id);
+                    localStorage.setItem('user_name', result.name);
+                    localStorage.setItem('username', result.username);
+                    localStorage.setItem('user_role', result.role);
+
+                    successMsg.textContent = '✅ 登录成功！正在跳转...';
+                    successMsg.style.display = 'block';
+                    submitBtn.textContent = '登录成功';
+
+                    setTimeout(() => {
+                        if (result.role === 'admin') {
+                            window.location.href = '/admin';
+                        } else {
+                            window.location.href = '/teacher';
+                        }
+                    }, 1000);
                 } else {
-                    errorMsg.textContent = data.detail || '登录失败，请检查账号密码';
+                    errorMsg.textContent = result.detail || '登录失败，请检查账号密码';
                     errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '登 录';
                 }
             } catch (err) {
                 errorMsg.textContent = '网络错误，请稍后重试';
                 errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登 录';
             }
         }
     </script>

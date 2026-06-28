@@ -108,19 +108,23 @@
         .footer-links a:hover {
             text-decoration: underline;
         }
-        .error-msg {
-            color: #d32f2f;
-            font-size: 13px;
-            margin-top: 8px;
-            text-align: center;
+        .msg {
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
             display: none;
         }
-        .success-msg {
+        .msg-success {
+            background: #e8f5e9;
             color: #2e7d32;
-            font-size: 13px;
-            margin-top: 8px;
-            text-align: center;
-            display: none;
+            display: block;
+        }
+        .msg-error {
+            background: #fce4ec;
+            color: #c62828;
+            display: block;
         }
         .status-badge {
             display: inline-block;
@@ -155,6 +159,8 @@
             <span class="status-badge">需管理员审核</span>
         </p>
 
+        <div id="msg" class="msg"></div>
+
         <form id="registerForm" onsubmit="handleRegister(event)">
             <div class="form-group">
                 <label>工号 *</label>
@@ -181,9 +187,6 @@
                 <input type="text" id="teacher_specialty" placeholder="如：青少年心理、焦虑抑郁" required>
             </div>
 
-            <div id="errorMsg" class="error-msg"></div>
-            <div id="successMsg" class="success-msg"></div>
-
             <button type="submit" class="btn-submit" id="submitBtn">提交注册</button>
         </form>
 
@@ -202,44 +205,58 @@
     <script>
         async function handleRegister(e) {
             e.preventDefault();
-            const form = document.getElementById('registerForm');
-            const errorMsg = document.getElementById('errorMsg');
-            const successMsg = document.getElementById('successMsg');
+
+            const msg = document.getElementById('msg');
             const submitBtn = document.getElementById('submitBtn');
 
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
+            msg.className = 'msg';
+            msg.style.display = 'none';
+
             submitBtn.disabled = true;
             submitBtn.textContent = '提交中...';
 
-            const formData = new FormData(form);
+            const data = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                name: document.getElementById('name').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                teacher_title: document.getElementById('teacher_title').value.trim(),
+                teacher_specialty: document.getElementById('teacher_specialty').value.trim()
+            };
 
             try {
                 const response = await fetch('/api/auth/teacher/register', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (response.ok && data.success) {
-                    successMsg.textContent = '✅ ' + (data.message || '注册成功！请等待管理员审核...');
-                    successMsg.style.display = 'block';
-                    form.reset();
-                    submitBtn.textContent = '已提交';
+                if (response.ok && result.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + (result.message || '注册成功！请等待管理员审核...');
+                    msg.style.display = 'block';
+                    submitBtn.textContent = '✅ 已提交';
+
+                    document.getElementById('registerForm').reset();
 
                     setTimeout(() => {
                         window.location.href = '/teacher/login';
                     }, 3000);
                 } else {
-                    errorMsg.textContent = data.detail || data.message || '注册失败，请重试';
-                    errorMsg.style.display = 'block';
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (result.detail || result.message || '注册失败，请重试');
+                    msg.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.textContent = '提交注册';
                 }
             } catch (err) {
-                errorMsg.textContent = '网络错误，请稍后重试';
-                errorMsg.style.display = 'block';
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请稍后重试';
+                msg.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = '提交注册';
             }
