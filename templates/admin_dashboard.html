@@ -283,6 +283,21 @@
         .create-form-body .btn-submit:hover { background: #e65100; }
         .create-form-body .form-full { grid-column: 1 / -1; }
 
+        .data-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .data-card:last-child { margin-bottom: 0; }
+        .data-card .info strong { font-size: 15px; }
+        .data-card .info p { font-size: 13px; color: #999; margin: 4px 0 0 0; }
+
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
             .header h1 { font-size: 18px; }
@@ -295,6 +310,7 @@
             th, td { padding: 8px 6px; }
             .action-btns { flex-direction: column; gap: 4px; }
             .btn-sm { width: 100%; text-align: center; }
+            .data-card { flex-direction: column; text-align: center; }
         }
         @media (max-width: 400px) {
             .stats-grid { grid-template-columns: 1fr; }
@@ -316,6 +332,7 @@
 
     <div class="container">
 
+        <!-- ===== 统计卡片 ===== -->
         <div class="stats-grid">
             <div class="stat-card pending">
                 <div class="number" id="statPending">0</div>
@@ -335,6 +352,7 @@
             </div>
         </div>
 
+        <!-- ===== 创建教师（折叠） ===== -->
         <div class="create-form-toggle" onclick="toggleCreateForm()">
             <span style="font-weight: 500;">➕ 管理员创建教师账号（免审核）</span>
             <span class="arrow" id="createArrow">▼</span>
@@ -386,12 +404,16 @@
             </form>
         </div>
 
+        <!-- ===== Tab 栏 ===== -->
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
             <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
             <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
+            <button class="tab-btn" onclick="switchTab('create_student')">👤 创建学生</button>
+            <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
         </div>
 
+        <!-- ===== Tab: 待审核教师 ===== -->
         <div id="tab-pending" class="tab-content active">
             <div class="table-wrap">
                 <h3>⏳ 待审核教师 <span class="count" id="pendingCount"></span></h3>
@@ -399,6 +421,7 @@
             </div>
         </div>
 
+        <!-- ===== Tab: 教师列表 ===== -->
         <div id="tab-teachers" class="tab-content">
             <div class="table-wrap">
                 <h3>👨‍🏫 所有教师 <span class="count" id="teachersCount"></span></h3>
@@ -406,10 +429,92 @@
             </div>
         </div>
 
+        <!-- ===== Tab: 学生列表 ===== -->
         <div id="tab-students" class="tab-content">
             <div class="table-wrap">
                 <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
                 <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 创建学生 ===== -->
+        <div id="tab-create_student" class="tab-content">
+            <div class="table-wrap">
+                <h3>👤 管理员创建学生账号</h3>
+                <div id="createStudentMsg" class="msg"></div>
+                <form id="createStudentForm" onsubmit="handleCreateStudent(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>学号 *</label>
+                            <input type="text" id="cs_username" placeholder="请输入学号" required>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" id="cs_name" placeholder="请输入姓名" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>密码 *</label>
+                            <input type="password" id="cs_password" placeholder="请设置密码（至少6位）" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>手机号 *</label>
+                            <input type="tel" id="cs_phone" placeholder="请输入手机号" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别 *</label>
+                            <select id="cs_gender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>班级 *</label>
+                            <input type="text" id="cs_class" placeholder="如：高三(1)班" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>年龄 *</label>
+                        <input type="number" id="cs_age" placeholder="请输入年龄" required min="6" max="30">
+                    </div>
+                    <div class="form-full" style="text-align: right; margin-top: 8px;">
+                        <button type="submit" class="btn-submit" style="background:#1a73e8;" id="csSubmitBtn">创建学生账号</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 数据管理 ===== -->
+        <div id="tab-data_manage" class="tab-content">
+            <div class="table-wrap">
+                <h3>🗑️ 数据管理</h3>
+                <div style="padding: 10px 0;">
+                    <div class="data-card">
+                        <div class="info">
+                            <strong>📋 删除所有预约记录</strong>
+                            <p>此操作将永久删除所有预约数据，不可恢复！</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteAllBookings()">🗑️ 删除所有预约</button>
+                    </div>
+                    <div class="data-card">
+                        <div class="info">
+                            <strong>👤 删除所有学生账号</strong>
+                            <p>此操作将永久删除所有学生账号，不可恢复！</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteAllStudents()">🗑️ 删除所有学生</button>
+                    </div>
+                    <div class="data-card">
+                        <div class="info">
+                            <strong>👨‍🏫 删除所有教师账号</strong>
+                            <p>此操作将永久删除所有教师账号，不可恢复！</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteAllTeachers()">🗑️ 删除所有教师</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -507,6 +612,7 @@
                         <td class="action-btns">
                             <button class="btn btn-success btn-sm" onclick="verifyTeacher('${t.id}')">✅ 通过</button>
                             <button class="btn btn-danger btn-sm" onclick="rejectTeacher('${t.id}')">❌ 拒绝</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${t.id}')">🗑️ 删除</button>
                         </td>
                     </tr>`;
                 });
@@ -519,7 +625,7 @@
             }
         }
 
-        // ===== 加载教师列表 =====
+        // ===== 加载教师列表（含启用/禁用/删除按钮） =====
         async function loadTeachers() {
             const container = document.getElementById('teacherList');
             try {
@@ -547,6 +653,8 @@
                     const statusText = t.teacher_verified ? '✅ 已审核' : '⏳ 待审核';
                     const statusClass = t.teacher_verified ? 'badge-verified' : 'badge-pending';
                     const gender = t.teacher_gender || '未设置';
+                    const activeStatus = t.status === 'active' ? '✅ 正常' : '🚫 已禁用';
+                    const activeClass = t.status === 'active' ? 'badge-active' : 'badge-inactive';
 
                     html += `<tr>
                         <td><strong>${t.username}</strong></td>
@@ -555,13 +663,20 @@
                         <td>${t.phone}</td>
                         <td>${t.teacher_title || '-'}</td>
                         <td>${t.teacher_specialty || '-'}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <span class="badge ${statusClass}">${statusText}</span>
+                            <span class="badge ${activeClass}">${activeStatus}</span>
+                        </td>
                         <td class="action-btns">
                             ${!t.teacher_verified ?
                                 `<button class="btn btn-success btn-sm" onclick="verifyTeacher('${t.id}')">✅ 通过</button>` :
                                 ''
                             }
-                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${t.id}')">🚫 禁用</button>
+                            ${t.status === 'active' ?
+                                `<button class="btn btn-danger btn-sm" onclick="toggleUserStatus('${t.id}', 'disable')">🚫 禁用</button>` :
+                                `<button class="btn btn-success btn-sm" onclick="toggleUserStatus('${t.id}', 'enable')">✅ 启用</button>`
+                            }
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${t.id}')">🗑️ 删除</button>
                         </td>
                     </tr>`;
                 });
@@ -574,7 +689,7 @@
             }
         }
 
-        // ===== 加载学生列表 =====
+        // ===== 加载学生列表（含启用/禁用/删除按钮） =====
         async function loadStudents() {
             const container = document.getElementById('studentList');
             try {
@@ -612,9 +727,10 @@
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
                         <td class="action-btns">
                             ${s.status === 'active' ?
-                                `<button class="btn btn-danger btn-sm" onclick="deactivateUser('${s.id}')">🚫 禁用</button>` :
-                                `<button class="btn btn-success btn-sm" onclick="activateUser('${s.id}')">✅ 激活</button>`
+                                `<button class="btn btn-danger btn-sm" onclick="toggleUserStatus('${s.id}', 'disable')">🚫 禁用</button>` :
+                                `<button class="btn btn-success btn-sm" onclick="toggleUserStatus('${s.id}', 'enable')">✅ 启用</button>`
                             }
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${s.id}')">🗑️ 删除</button>
                         </td>
                     </tr>`;
                 });
@@ -675,58 +791,45 @@
             }
         }
 
-        // ===== 禁用用户 =====
+        // ===== 启用/禁用用户 =====
+        async function toggleUserStatus(userId, action) {
+            const actionText = action === 'enable' ? '启用' : '禁用';
+            if (!confirm(`确认${actionText}该用户吗？`)) return;
+
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/${action}`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ 用户已${actionText}`);
+                    loadStats();
+                    loadStudents();
+                    loadTeachers();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 删除用户（永久删除） =====
         async function deleteUser(userId) {
-            if (!confirm('确认禁用该用户吗？\n禁用后用户将无法登录。')) return;
+            if (!confirm('⚠️ 确认永久删除该用户吗？此操作不可恢复！')) return;
+            if (!confirm('再次确认：删除该用户？')) return;
+
             try {
                 const res = await fetch(`/api/admin/users/${userId}`, {
                     method: 'DELETE'
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ 用户已禁用');
+                    alert('✅ 用户已删除');
                     loadStats();
                     loadTeachers();
                     loadStudents();
-                } else {
-                    alert('❌ ' + (data.detail || data.message || '操作失败'));
-                }
-            } catch (e) {
-                alert('网络错误，请重试');
-            }
-        }
-
-        // ===== 激活用户 =====
-        async function activateUser(userId) {
-            try {
-                const res = await fetch(`/api/admin/users/${userId}/activate`, {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ 用户已激活');
-                    loadStats();
-                    loadStudents();
-                } else {
-                    alert('❌ ' + (data.detail || data.message || '操作失败'));
-                }
-            } catch (e) {
-                alert('网络错误，请重试');
-            }
-        }
-
-        // ===== 禁用学生 =====
-        async function deactivateUser(userId) {
-            if (!confirm('确认禁用该学生账号吗？')) return;
-            try {
-                const res = await fetch(`/api/admin/users/${userId}/deactivate`, {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ 学生账号已禁用');
-                    loadStats();
-                    loadStudents();
+                    loadPending();
                 } else {
                     alert('❌ ' + (data.detail || data.message || '操作失败'));
                 }
@@ -747,7 +850,6 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '创建中...';
 
-            // 手动构建 FormData
             const formData = new FormData();
             formData.append('username', document.getElementById('createUsername').value.trim());
             formData.append('password', document.getElementById('createPassword').value.trim());
@@ -757,11 +859,6 @@
             formData.append('teacher_title', document.getElementById('createTitle').value.trim());
             formData.append('teacher_specialty', document.getElementById('createSpecialty').value.trim());
 
-            console.log('创建教师数据:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
             try {
                 const response = await fetch('/api/admin/teacher', {
                     method: 'POST',
@@ -769,7 +866,6 @@
                 });
 
                 const data = await response.json();
-                console.log('服务器响应:', data);
 
                 if (response.ok && data.success) {
                     msg.className = 'msg msg-success';
@@ -788,13 +884,138 @@
                     msg.style.display = 'block';
                 }
             } catch (err) {
-                console.error('创建错误:', err);
                 msg.className = 'msg msg-error';
                 msg.textContent = '❌ 网络错误，请稍后重试';
                 msg.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = '创建教师账号';
+            }
+        }
+
+        // ===== 管理员创建学生 =====
+        async function handleCreateStudent(e) {
+            e.preventDefault();
+            const form = document.getElementById('createStudentForm');
+            const msg = document.getElementById('createStudentMsg');
+            const submitBtn = document.getElementById('csSubmitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '创建中...';
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('cs_username').value.trim());
+            formData.append('password', document.getElementById('cs_password').value.trim());
+            formData.append('name', document.getElementById('cs_name').value.trim());
+            formData.append('phone', document.getElementById('cs_phone').value.trim());
+            formData.append('student_gender', document.getElementById('cs_gender').value);
+            formData.append('student_class', document.getElementById('cs_class').value.trim());
+            formData.append('age', document.getElementById('cs_age').value);
+
+            try {
+                const response = await fetch('/api/admin/student', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + (data.message || '学生账号创建成功！');
+                    msg.style.display = 'block';
+                    form.reset();
+                    loadStats();
+                    loadStudents();
+                    setTimeout(() => {
+                        msg.style.display = 'none';
+                    }, 5000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (data.detail || data.message || '创建失败，请重试');
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请稍后重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '创建学生账号';
+            }
+        }
+
+        // ===== 删除所有预约 =====
+        async function deleteAllBookings() {
+            if (!confirm('⚠️ 此操作将永久删除所有预约记录，不可恢复！确认继续？')) return;
+            if (!confirm('再次确认：删除所有预约数据？')) return;
+
+            try {
+                const res = await fetch('/api/admin/bookings/all', {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 所有预约已删除');
+                    loadStats();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 删除所有学生 =====
+        async function deleteAllStudents() {
+            if (!confirm('⚠️ 此操作将永久删除所有学生账号，不可恢复！确认继续？')) return;
+            if (!confirm('再次确认：删除所有学生账号？')) return;
+
+            try {
+                const res = await fetch('/api/admin/students');
+                const students = await res.json();
+
+                let deleted = 0;
+                for (const student of students) {
+                    const delRes = await fetch(`/api/admin/users/${student.id}`, {
+                        method: 'DELETE'
+                    });
+                    if (delRes.ok) deleted++;
+                }
+
+                alert(`✅ 已删除 ${deleted} 个学生账号`);
+                loadStats();
+                loadStudents();
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 删除所有教师 =====
+        async function deleteAllTeachers() {
+            if (!confirm('⚠️ 此操作将永久删除所有教师账号，不可恢复！确认继续？')) return;
+            if (!confirm('再次确认：删除所有教师账号？')) return;
+
+            try {
+                const res = await fetch('/api/admin/teachers');
+                const teachers = await res.json();
+
+                let deleted = 0;
+                for (const teacher of teachers) {
+                    const delRes = await fetch(`/api/admin/users/${teacher.id}`, {
+                        method: 'DELETE'
+                    });
+                    if (delRes.ok) deleted++;
+                }
+
+                alert(`✅ 已删除 ${deleted} 个教师账号`);
+                loadStats();
+                loadTeachers();
+                loadPending();
+            } catch (e) {
+                alert('网络错误，请重试');
             }
         }
 
