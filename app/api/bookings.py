@@ -30,14 +30,6 @@ class BookingCreateRequest(BaseModel):
     teacher_id: Optional[str] = ""
 
 
-class BookingConfirmRequest(BaseModel):
-    teacher_id: str
-    teacher_name: str
-    confirmed_date: str
-    confirmed_time: str
-    room: str
-
-
 def get_booking_service():
     db = get_db()
     repo = BookingRepository(db)
@@ -105,7 +97,6 @@ async def create_booking(request: BookingCreateRequest):
 
         result = await service.create_booking(data)
 
-        # 确保返回的是 JSON 可序列化的数据
         return JSONResponse(
             status_code=200 if result.get("success") else 400,
             content=result
@@ -155,16 +146,33 @@ async def confirm_booking(
     """教师确认预约 - JSON 格式"""
     try:
         data = await request.json()
+
+        teacher_id = data.get("teacher_id")
+        teacher_name = data.get("teacher_name")
+        confirmed_date = data.get("confirmed_date")
+        confirmed_time = data.get("confirmed_time")
+        room = data.get("room")
+
+        if not all([teacher_id, teacher_name, confirmed_date, confirmed_time, room]):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "请填写完整的确认信息"}
+            )
+
         service = get_booking_service()
         result = await service.confirm_booking(
             booking_id,
-            data.get("teacher_id"),
-            data.get("teacher_name"),
-            data.get("confirmed_date"),
-            data.get("confirmed_time"),
-            data.get("room")
+            teacher_id,
+            teacher_name,
+            confirmed_date,
+            confirmed_time,
+            room
         )
-        return JSONResponse(content=result)
+
+        return JSONResponse(
+            status_code=200 if result.get("success") else 400,
+            content=result
+        )
     except Exception as e:
         return JSONResponse(
             status_code=400,
