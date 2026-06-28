@@ -362,13 +362,21 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label>性别 *</label>
+                        <select id="createGender" required>
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>职称 *</label>
                         <input type="text" id="createTitle" placeholder="如：高级心理咨询师" required>
                     </div>
-                    <div class="form-group">
-                        <label>专业领域 *</label>
-                        <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
-                    </div>
+                </div>
+                <div class="form-group">
+                    <label>专业领域 *</label>
+                    <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
                 </div>
                 <div class="form-full" style="text-align: right; margin-top: 8px;">
                     <button type="submit" class="btn-submit">创建教师账号</button>
@@ -406,10 +414,12 @@
     </div>
 
     <script>
+        // ===== 获取当前用户信息 =====
         const userName = localStorage.getItem('user_name') || '管理员';
         const username = localStorage.getItem('username') || '';
         document.getElementById('userName').textContent = '👤 ' + userName;
 
+        // ===== 切换 Tab =====
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -422,6 +432,7 @@
             else if (tab === 'students') loadStudents();
         }
 
+        // ===== 折叠创建表单 =====
         function toggleCreateForm() {
             const body = document.getElementById('createFormBody');
             const arrow = document.getElementById('createArrow');
@@ -429,6 +440,7 @@
             arrow.classList.toggle('open');
         }
 
+        // ===== 加载统计数据 =====
         async function loadStats() {
             try {
                 const [pendingRes, teachersRes, studentsRes] = await Promise.all([
@@ -458,6 +470,7 @@
             }
         }
 
+        // ===== 加载待审核教师 =====
         async function loadPending() {
             const container = document.getElementById('pendingList');
             try {
@@ -473,6 +486,7 @@
                     <thead><tr>
                         <th>工号</th>
                         <th>姓名</th>
+                        <th>性别</th>
                         <th>手机</th>
                         <th>职称</th>
                         <th>专业领域</th>
@@ -480,9 +494,11 @@
                     </tr></thead><tbody>`;
 
                 data.forEach(t => {
+                    const gender = t.teacher_gender || '未设置';
                     html += `<tr>
                         <td><strong>${t.username}</strong></td>
                         <td>${t.name}</td>
+                        <td>${gender}</td>
                         <td>${t.phone}</td>
                         <td>${t.teacher_title || '-'}</td>
                         <td>${t.teacher_specialty || '-'}</td>
@@ -501,6 +517,7 @@
             }
         }
 
+        // ===== 加载教师列表 =====
         async function loadTeachers() {
             const container = document.getElementById('teacherList');
             try {
@@ -516,6 +533,7 @@
                     <thead><tr>
                         <th>工号</th>
                         <th>姓名</th>
+                        <th>性别</th>
                         <th>手机</th>
                         <th>职称</th>
                         <th>专业领域</th>
@@ -526,10 +544,12 @@
                 data.forEach(t => {
                     const statusText = t.teacher_verified ? '✅ 已审核' : '⏳ 待审核';
                     const statusClass = t.teacher_verified ? 'badge-verified' : 'badge-pending';
+                    const gender = t.teacher_gender || '未设置';
 
                     html += `<tr>
                         <td><strong>${t.username}</strong></td>
                         <td>${t.name}</td>
+                        <td>${gender}</td>
                         <td>${t.phone}</td>
                         <td>${t.teacher_title || '-'}</td>
                         <td>${t.teacher_specialty || '-'}</td>
@@ -552,6 +572,7 @@
             }
         }
 
+        // ===== 加载学生列表 =====
         async function loadStudents() {
             const container = document.getElementById('studentList');
             try {
@@ -604,6 +625,7 @@
             }
         }
 
+        // ===== 审核通过教师 =====
         async function verifyTeacher(userId) {
             if (!confirm('确认审核通过该教师账号吗？\n通过后教师将可以登录系统。')) return;
             try {
@@ -627,6 +649,7 @@
             }
         }
 
+        // ===== 拒绝教师 =====
         async function rejectTeacher(userId) {
             if (!confirm('确认拒绝该教师注册申请吗？\n该账号将被删除。')) return;
             try {
@@ -650,6 +673,7 @@
             }
         }
 
+        // ===== 禁用用户 =====
         async function deleteUser(userId) {
             if (!confirm('确认禁用该用户吗？\n禁用后用户将无法登录。')) return;
             try {
@@ -670,6 +694,7 @@
             }
         }
 
+        // ===== 激活用户 =====
         async function activateUser(userId) {
             try {
                 const res = await fetch(`/api/admin/users/${userId}/activate`, {
@@ -688,6 +713,7 @@
             }
         }
 
+        // ===== 禁用学生 =====
         async function deactivateUser(userId) {
             if (!confirm('确认禁用该学生账号吗？')) return;
             try {
@@ -707,6 +733,7 @@
             }
         }
 
+        // ===== 管理员创建教师 =====
         async function handleCreateTeacher(e) {
             e.preventDefault();
             const form = document.getElementById('createTeacherForm');
@@ -719,6 +746,7 @@
             submitBtn.textContent = '创建中...';
 
             const formData = new FormData(form);
+            formData.append('teacher_gender', document.getElementById('createGender').value);
 
             try {
                 const res = await fetch('/api/admin/teacher', {
@@ -752,6 +780,7 @@
             }
         }
 
+        // ===== 退出登录 =====
         function logout() {
             if (confirm('确认退出登录吗？')) {
                 localStorage.clear();
@@ -759,6 +788,7 @@
             }
         }
 
+        // ===== 页面加载时初始化 =====
         document.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('token')) {
                 window.location.href = '/admin/login';
