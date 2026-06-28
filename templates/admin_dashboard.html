@@ -254,7 +254,8 @@
             font-weight: 500;
             font-size: 13px;
         }
-        .create-form-body .form-group input {
+        .create-form-body .form-group input,
+        .create-form-body .form-group select {
             width: 100%;
             padding: 10px 12px;
             border: 2px solid #e0e0e0;
@@ -263,7 +264,8 @@
             transition: border-color 0.3s;
             box-sizing: border-box;
         }
-        .create-form-body .form-group input:focus {
+        .create-form-body .form-group input:focus,
+        .create-form-body .form-group select:focus {
             outline: none;
             border-color: #ff8f00;
         }
@@ -379,7 +381,7 @@
                     <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
                 </div>
                 <div class="form-full" style="text-align: right; margin-top: 8px;">
-                    <button type="submit" class="btn-submit">创建教师账号</button>
+                    <button type="submit" class="btn-submit" id="createSubmitBtn">创建教师账号</button>
                 </div>
             </form>
         </div>
@@ -738,30 +740,45 @@
             e.preventDefault();
             const form = document.getElementById('createTeacherForm');
             const msg = document.getElementById('createMsg');
-            const submitBtn = form.querySelector('.btn-submit');
+            const submitBtn = document.getElementById('createSubmitBtn');
 
             msg.className = 'msg';
             msg.style.display = 'none';
             submitBtn.disabled = true;
             submitBtn.textContent = '创建中...';
 
-            const formData = new FormData(form);
+            // 手动构建 FormData
+            const formData = new FormData();
+            formData.append('username', document.getElementById('createUsername').value.trim());
+            formData.append('password', document.getElementById('createPassword').value.trim());
+            formData.append('name', document.getElementById('createName').value.trim());
+            formData.append('phone', document.getElementById('createPhone').value.trim());
             formData.append('teacher_gender', document.getElementById('createGender').value);
+            formData.append('teacher_title', document.getElementById('createTitle').value.trim());
+            formData.append('teacher_specialty', document.getElementById('createSpecialty').value.trim());
+
+            console.log('创建教师数据:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
 
             try {
-                const res = await fetch('/api/admin/teacher', {
+                const response = await fetch('/api/admin/teacher', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
 
-                if (res.ok && data.success) {
+                const data = await response.json();
+                console.log('服务器响应:', data);
+
+                if (response.ok && data.success) {
                     msg.className = 'msg msg-success';
                     msg.textContent = '✅ ' + (data.message || '教师账号创建成功！');
                     msg.style.display = 'block';
                     form.reset();
                     loadStats();
                     loadTeachers();
+                    loadPending();
                     setTimeout(() => {
                         msg.style.display = 'none';
                     }, 5000);
@@ -771,6 +788,7 @@
                     msg.style.display = 'block';
                 }
             } catch (err) {
+                console.error('创建错误:', err);
                 msg.className = 'msg msg-error';
                 msg.textContent = '❌ 网络错误，请稍后重试';
                 msg.style.display = 'block';
