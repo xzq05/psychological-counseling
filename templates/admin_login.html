@@ -91,6 +91,10 @@
         .btn-submit:hover {
             background: #e65100;
         }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .login-footer {
             text-align: center;
             margin-top: 18px;
@@ -134,6 +138,8 @@
             </p>
         </div>
 
+        <div id="errorMsg" class="error-msg"></div>
+
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label>管理员账号</label>
@@ -143,8 +149,7 @@
                 <label>密码</label>
                 <input type="password" id="password" placeholder="请输入密码" required>
             </div>
-            <div id="errorMsg" class="error-msg"></div>
-            <button type="submit" class="btn-submit">登 录</button>
+            <button type="submit" class="btn-submit" id="submitBtn">登 录</button>
         </form>
 
         <div class="login-footer">
@@ -157,40 +162,81 @@
     <script>
         async function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
 
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // 隐藏之前的错误
             errorMsg.style.display = 'none';
 
-            try {
-                const formData = new FormData();
-                formData.append('username', username);
-                formData.append('password', password);
+            // 验证输入
+            if (!username || !password) {
+                errorMsg.textContent = '请输入管理员账号和密码';
+                errorMsg.style.display = 'block';
+                return;
+            }
 
+            // 禁用按钮
+            submitBtn.disabled = true;
+            submitBtn.textContent = '登录中...';
+
+            // 构建 JSON 数据
+            const data = {
+                username: username,
+                password: password
+            };
+
+            console.log('管理员登录请求:', data);
+
+            try {
                 const response = await fetch('/api/auth/admin/login', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
-                const data = await response.json();
+                const result = await response.json();
+                console.log('管理员登录响应:', result);
 
-                if (response.ok && data.success) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user_id', data.user_id);
-                    localStorage.setItem('user_name', data.name);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('user_role', data.role);
-                    window.location.href = '/admin';
+                if (response.ok && result.success) {
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user_id', result.user_id);
+                    localStorage.setItem('user_name', result.name);
+                    localStorage.setItem('username', result.username);
+                    localStorage.setItem('user_role', result.role);
+
+                    submitBtn.textContent = '登录成功';
+
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 500);
                 } else {
-                    errorMsg.textContent = data.detail || '登录失败，请检查账号密码';
+                    errorMsg.textContent = result.detail || '登录失败，请检查账号密码';
                     errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '登 录';
                 }
             } catch (err) {
+                console.error('网络错误:', err);
                 errorMsg.textContent = '网络错误，请稍后重试';
                 errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登 录';
             }
         }
+
+        // 页面加载时检查是否已登录
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('user_role');
+            if (token && role === 'admin') {
+                window.location.href = '/admin';
+            }
+        });
     </script>
 </body>
 </html>
