@@ -505,6 +505,7 @@
         // ===== 提交预约 =====
         async function handleBooking(e) {
             e.preventDefault();
+
             const form = document.getElementById('bookingForm');
             const msg = document.getElementById('formMsg');
             const submitBtn = document.getElementById('submitBtn');
@@ -514,37 +515,68 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '提交中...';
 
-            const formData = new FormData(form);
+            // 收集表单数据为 JSON
+            const data = {
+                student_id: document.getElementById('studentId').value || userId,
+                student_name: document.getElementById('studentName').value.trim() || userName,
+                student_phone: document.getElementById('studentPhone').value.trim(),
+                student_gender: document.getElementById('studentGender').value,
+                student_age: parseInt(document.getElementById('studentAge').value) || 0,
+                student_class: document.getElementById('studentClass').value.trim(),
+                booking_date: document.getElementById('bookingDate').value,
+                booking_time: document.getElementById('bookingTime').value,
+                consultation_type: document.getElementById('consultationType').value,
+                consultation_detail: document.getElementById('consultationDetail').value.trim() || '',
+                teacher_id: document.getElementById('teacherSelect').value || ''
+            };
+
+            console.log('📤 预约数据:', JSON.stringify(data));
 
             try {
-                const res = await fetch('/api/bookings', {
+                const response = await fetch('/api/bookings', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
-                const data = await res.json();
 
-                if (res.ok && data.success) {
+                const result = await response.json();
+                console.log('📥 服务器响应:', result);
+
+                if (response.ok && result.success) {
                     msg.className = 'msg msg-success';
-                    msg.textContent = '✅ ' + (data.message || '预约提交成功！');
+                    msg.textContent = '✅ ' + (result.message || '预约提交成功！');
                     msg.style.display = 'block';
+
+                    // 重置表单（保留姓名和学号）
+                    const nameVal = document.getElementById('studentName').value;
+                    const idVal = document.getElementById('studentId').value;
                     form.reset();
-                    document.getElementById('studentName').value = userName;
-                    document.getElementById('studentId').value = userId;
+                    document.getElementById('studentName').value = nameVal;
+                    document.getElementById('studentId').value = idVal;
                     document.getElementById('bookingDate').value = today;
+
+                    submitBtn.textContent = '✅ 提交成功';
+
                     setTimeout(() => {
                         loadBookings();
                         loadStats();
-                    }, 500);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '提交预约';
+                    }, 1500);
                 } else {
                     msg.className = 'msg msg-error';
-                    msg.textContent = '❌ ' + (data.detail || data.message || '提交失败，请重试');
+                    msg.textContent = '❌ ' + (result.detail || result.message || '提交失败，请重试');
                     msg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '提交预约';
                 }
             } catch (err) {
+                console.error('❌ 网络错误:', err);
                 msg.className = 'msg msg-error';
                 msg.textContent = '❌ 网络错误，请稍后重试';
                 msg.style.display = 'block';
-            } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = '提交预约';
             }

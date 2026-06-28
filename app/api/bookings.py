@@ -69,43 +69,49 @@ async def get_teachers_list():
 @router.post("/api/bookings")
 async def create_booking(request: BookingCreateRequest):
     """学生创建预约 - JSON 格式"""
-    service = get_booking_service()
+    try:
+        service = get_booking_service()
 
-    data = {
-        "student_id": request.student_id,
-        "student_name": request.student_name,
-        "student_phone": request.student_phone,
-        "student_gender": request.student_gender,
-        "student_age": request.student_age,
-        "student_class": request.student_class,
-        "booking_date": request.booking_date,
-        "booking_time": request.booking_time,
-        "consultation_type": request.consultation_type,
-        "consultation_detail": request.consultation_detail,
-        "status": "待确认"
-    }
+        data = {
+            "student_id": request.student_id,
+            "student_name": request.student_name,
+            "student_phone": request.student_phone,
+            "student_gender": request.student_gender,
+            "student_age": request.student_age,
+            "student_class": request.student_class,
+            "booking_date": request.booking_date,
+            "booking_time": request.booking_time,
+            "consultation_type": request.consultation_type,
+            "consultation_detail": request.consultation_detail or "",
+            "status": "待确认"
+        }
 
-    # 如果选择了老师，保存老师信息
-    if request.teacher_id:
-        data["teacher_id"] = request.teacher_id
-        db = get_db()
-        repo = UserRepository(db)
-        teacher = await repo.find_by_id(request.teacher_id)
-        if teacher:
-            data["teacher_name"] = teacher.name
+        # 如果选择了老师，保存老师信息
+        if request.teacher_id:
+            data["teacher_id"] = request.teacher_id
+            db = get_db()
+            repo = UserRepository(db)
+            teacher = await repo.find_by_id(request.teacher_id)
+            if teacher:
+                data["teacher_name"] = teacher.name
 
-    result = await service.create_booking(data)
+        result = await service.create_booking(data)
 
-    if not result["success"]:
+        if not result["success"]:
+            return JSONResponse(
+                status_code=400,
+                content=result
+            )
+
         return JSONResponse(
-            status_code=400,
+            status_code=200,
             content=result
         )
-
-    return JSONResponse(
-        status_code=200,
-        content=result
-    )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"服务器错误: {str(e)}"}
+        )
 
 
 @router.get("/api/bookings/student/{student_id}")
@@ -144,21 +150,20 @@ async def confirm_booking(
     """教师确认预约 - JSON 格式"""
     try:
         data = await request.json()
-        teacher_id = data.get("teacher_id")
-        teacher_name = data.get("teacher_name")
-        confirmed_date = data.get("confirmed_date")
-        confirmed_time = data.get("confirmed_time")
-        room = data.get("room")
-
         service = get_booking_service()
         result = await service.confirm_booking(
-            booking_id, teacher_id, teacher_name, confirmed_date, confirmed_time, room
+            booking_id,
+            data.get("teacher_id"),
+            data.get("teacher_name"),
+            data.get("confirmed_date"),
+            data.get("confirmed_time"),
+            data.get("room")
         )
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
             status_code=400,
-            content={"success": False, "message": f"请求解析错误: {str(e)}"}
+            content={"success": False, "message": f"确认失败: {str(e)}"}
         )
 
 
