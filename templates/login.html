@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 · 心灵驿站</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="brand">
+                <span class="brand-icon">🧠</span>
+                <h1>心灵驿站</h1>
+                <p>心理咨询预约系统</p>
+                <div class="subtitle">用心守护 · 从心开始</div>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>学号 / 工号</label>
+                    <input type="text" id="username" placeholder="请输入学号或工号" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登 录</button>
+            </form>
+
+            <div class="auth-link">
+                还没有账号？<a href="/register">立即注册</a>
+            </div>
+
+            <div class="auth-hint">
+                🔑 默认管理员：<strong>admin</strong> / 密码：<strong>123456</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const msgDiv = document.getElementById('message');
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('name', data.name);
+                    localStorage.setItem('role', data.role);
+
+                    if (data.role === 'admin') {
+                        window.location.href = '/admin';
+                    } else if (data.role === 'teacher') {
+                        window.location.href = '/teacher';
+                    } else {
+                        window.location.href = '/student';
+                    }
+                } else {
+                    msgDiv.className = 'message error';
+                    msgDiv.textContent = data.detail || '登录失败';
+                }
+            } catch (error) {
+                msgDiv.className = 'message error';
+                msgDiv.textContent = '网络错误，请稍后重试';
+            }
+        }
+    </script>
+</body>
+</html>

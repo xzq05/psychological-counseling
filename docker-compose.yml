@@ -1,0 +1,19 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=${MONGODB_URL}
+      - MONGODB_DB=${MONGODB_DB}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB}
+      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - .env
+    restart: unless-stopped

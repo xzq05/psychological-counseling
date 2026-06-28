@@ -1,0 +1,31 @@
+# render.yaml
+services:
+  - type: web
+    name: psychological-counseling
+    runtime: python
+    repo: https://github.com/yourusername/psychological-counseling
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGODB_URL
+        sync: false
+      - key: MONGODB_DB
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_DB
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: 1440
+      - key: DEBUG
+        value: false

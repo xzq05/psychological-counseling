@@ -1,0 +1,789 @@
+<!-- templates/teacher_dashboard.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师端 - 心理咨询管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .header-actions a:hover { background: rgba(255,255,255,0.3); }
+        .header-actions .user-name {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .welcome-banner {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 16px;
+            padding: 30px 35px;
+            margin-bottom: 28px;
+            border-left: 6px solid #2e7d32;
+        }
+        .welcome-banner h2 { color: #1b5e20; font-size: 24px; margin-bottom: 6px; }
+        .welcome-banner p { color: #555; font-size: 15px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2e7d32;
+        }
+        .stat-card .label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .stat-card.pending .number { color: #ff8f00; }
+        .stat-card.today .number { color: #1a73e8; }
+        .stat-card.total .number { color: #2e7d32; }
+
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background: transparent;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #2e7d32;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) { background: #f0f4f8; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .booking-list {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .booking-list h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .booking-list h3 .count {
+            font-size: 14px;
+            color: #888;
+            font-weight: normal;
+        }
+
+        .booking-item {
+            padding: 16px 18px;
+            border-bottom: 1px solid #f0f4f8;
+            transition: background 0.2s;
+        }
+        .booking-item:last-child { border-bottom: none; }
+        .booking-item:hover { background: #f8fafc; }
+
+        .booking-item .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .booking-item .student-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 18px;
+            align-items: center;
+        }
+        .booking-item .student-info .name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        .booking-item .student-info .detail {
+            color: #666;
+            font-size: 13px;
+        }
+        .booking-item .student-info .badge {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .badge-completed { background: #e3f2fd; color: #1565c0; }
+        .badge-cancelled { background: #fce4ec; color: #c62828; }
+        .badge-rejected { background: #fce4ec; color: #c62828; }
+
+        .booking-item .bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .booking-item .bottom-row .meta {
+            color: #888;
+            font-size: 13px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .booking-item .bottom-row .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .btn-sm-success {
+            background: #43a047;
+            color: white;
+        }
+        .btn-sm-success:hover { background: #2e7d32; }
+        .btn-sm-danger {
+            background: #e53935;
+            color: white;
+        }
+        .btn-sm-danger:hover { background: #c62828; }
+        .btn-sm-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-sm-primary:hover { background: #0d47a1; }
+        .btn-sm-outline {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        .btn-sm-outline:hover { background: #f5f5f5; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 35px 40px;
+            max-width: 480px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-box h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-box .form-group {
+            margin-bottom: 14px;
+        }
+        .modal-box .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .modal-box .form-group input,
+        .modal-box .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .modal-box .form-group input:focus,
+        .modal-box .form-group select:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+        .modal-box .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .modal-box .btn-row button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .modal-box .btn-row .btn-confirm {
+            background: #2e7d32;
+            color: white;
+        }
+        .modal-box .btn-row .btn-confirm:hover { background: #1b5e20; }
+        .modal-box .btn-row .btn-cancel {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .modal-box .btn-row .btn-cancel:hover { background: #ccc; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+        .msg {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 14px;
+        }
+        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .msg-error { background: #fce4ec; color: #c62828; display: block; }
+        .msg-info { background: #e3f2fd; color: #1565c0; display: block; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; padding: 14px 16px; }
+            .header h1 { font-size: 18px; }
+            .header-actions { justify-content: center; }
+            .header-actions a { font-size: 13px; padding: 6px 12px; }
+            .container { padding: 16px 12px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .booking-item .top-row { flex-direction: column; }
+            .booking-item .bottom-row { flex-direction: column; align-items: stretch; }
+            .booking-item .bottom-row .actions { justify-content: flex-start; }
+            .welcome-banner { padding: 20px; }
+            .welcome-banner h2 { font-size: 20px; }
+            .modal-box { padding: 24px 20px; }
+        }
+        @media (max-width: 400px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>👨‍🏫 教师端 - 心理咨询管理</h1>
+        <div class="header-actions">
+            <span class="user-name" id="userName">👤 教师</span>
+            <a href="/teacher/change-password">🔐 修改密码</a>
+            <a href="/">🏠 返回首页</a>
+            <a href="#" onclick="logout()">🚪 退出</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="welcome-banner">
+            <h2 id="welcomeMsg">欢迎回来！</h2>
+            <p>在这里你可以查看和管理学生的心理咨询预约。</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="number" id="statPending">0</div>
+                <div class="label">⏳ 待确认</div>
+            </div>
+            <div class="stat-card today">
+                <div class="number" id="statToday">0</div>
+                <div class="label">📅 今日预约</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statConfirmed">0</div>
+                <div class="label">✅ 已确认</div>
+            </div>
+            <div class="stat-card total">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">📊 总预约</div>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待确认</button>
+            <button class="tab-btn" onclick="switchTab('today')">📅 今日预约</button>
+            <button class="tab-btn" onclick="switchTab('all')">📋 全部预约</button>
+        </div>
+
+        <div id="tab-pending" class="tab-content active">
+            <div class="booking-list">
+                <h3>⏳ 待确认预约 <span class="count" id="pendingCount"></span></h3>
+                <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>暂无待确认预约</p></div></div>
+            </div>
+        </div>
+
+        <div id="tab-today" class="tab-content">
+            <div class="booking-list">
+                <h3>📅 今日预约 <span class="count" id="todayCount"></span></h3>
+                <div id="todayList"><div class="empty-state"><div class="icon">📅</div><p>今日暂无预约</p></div></div>
+            </div>
+        </div>
+
+        <div id="tab-all" class="tab-content">
+            <div class="booking-list">
+                <h3>📋 全部预约 <span class="count" id="allCount"></span></h3>
+                <div id="allList"><div class="empty-state"><div class="icon">📭</div><p>暂无预约记录</p></div></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <h3>✅ 确认预约</h3>
+            <div id="modalMsg" class="msg"></div>
+            <form id="confirmForm" onsubmit="handleConfirm(event)">
+                <input type="hidden" id="confirmBookingId">
+                <input type="hidden" id="confirmTeacherId">
+                <input type="hidden" id="confirmTeacherName">
+
+                <div class="form-group">
+                    <label>学生姓名</label>
+                    <input type="text" id="confirmStudentName" disabled style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>咨询类型</label>
+                    <input type="text" id="confirmType" disabled style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>确认日期 *</label>
+                    <input type="date" id="confirmDate" required>
+                </div>
+                <div class="form-group">
+                    <label>确认时间 *</label>
+                    <input type="time" id="confirmTime" required>
+                </div>
+                <div class="form-group">
+                    <label>咨询室 *</label>
+                    <input type="text" id="confirmRoom" placeholder="如：A栋302室" required>
+                </div>
+
+                <div class="btn-row">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn-confirm">确认预约</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const userId = localStorage.getItem('user_id') || '';
+        const userName = localStorage.getItem('user_name') || '教师';
+        const username = localStorage.getItem('username') || '';
+
+        document.getElementById('userName').textContent = '👤 ' + userName;
+        document.getElementById('welcomeMsg').textContent = '欢迎回来，' + userName + '！';
+
+        const today = new Date().toISOString().split('T')[0];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'pending') loadPending();
+            else if (tab === 'today') loadToday();
+            else if (tab === 'all') loadAll();
+        }
+
+        async function loadPending() {
+            const container = document.getElementById('pendingList');
+            try {
+                const res = await fetch('/api/bookings/pending');
+                const data = await res.json();
+
+                document.getElementById('pendingCount').textContent = `(${data.length || 0} 条)`;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>暂无待确认预约</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = renderBookingList(data);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载待确认预约失败', e);
+            }
+        }
+
+        async function loadToday() {
+            const container = document.getElementById('todayList');
+            try {
+                const res = await fetch(`/api/bookings/today?date=${today}`);
+                const data = await res.json();
+
+                document.getElementById('todayCount').textContent = `(${data.length || 0} 条)`;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>今日暂无预约</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = renderBookingList(data);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载今日预约失败', e);
+            }
+        }
+
+        async function loadAll() {
+            const container = document.getElementById('allList');
+            try {
+                const res = await fetch('/api/bookings/all');
+                const data = await res.json();
+
+                document.getElementById('allCount').textContent = `(${data.length || 0} 条)`;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无预约记录</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = renderBookingList(data);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载全部预约失败', e);
+            }
+        }
+
+        function renderBookingList(bookings) {
+            let html = '';
+            bookings.forEach(b => {
+                const statusMap = {
+                    '待确认': 'badge-pending',
+                    '已确认': 'badge-confirmed',
+                    '已完成': 'badge-completed',
+                    '已取消': 'badge-cancelled',
+                    '已拒绝': 'badge-rejected'
+                };
+                const badgeClass = statusMap[b.status] || 'badge-pending';
+
+                let dateInfo = '';
+                if (b.status === '已确认' || b.status === '已完成') {
+                    dateInfo = `📅 ${b.confirmed_date || b.booking_date} 🕐 ${b.confirmed_time || b.booking_time}`;
+                } else {
+                    dateInfo = `📅 ${b.booking_date} 🕐 ${b.booking_time}`;
+                }
+
+                let actionsHtml = '';
+                if (b.status === '待确认') {
+                    actionsHtml = `
+                        <button class="btn-sm btn-sm-success" onclick="openConfirmModal('${b.id}')">确认</button>
+                        <button class="btn-sm btn-sm-danger" onclick="rejectBooking('${b.id}')">拒绝</button>
+                    `;
+                } else if (b.status === '已确认') {
+                    actionsHtml = `
+                        <button class="btn-sm btn-sm-primary" onclick="completeBooking('${b.id}')">完成</button>
+                        <button class="btn-sm btn-sm-danger" onclick="rejectBooking('${b.id}')">拒绝</button>
+                    `;
+                }
+
+                html += `
+                    <div class="booking-item">
+                        <div class="top-row">
+                            <div class="student-info">
+                                <span class="name">${b.student_name}</span>
+                                <span class="detail">📚 ${b.student_class || '未填写'}</span>
+                                <span class="detail">📱 ${b.student_phone || '未填写'}</span>
+                                <span class="badge ${badgeClass}">${b.status}</span>
+                            </div>
+                            <span class="detail">#${b.queue_number || 'N/A'}</span>
+                        </div>
+                        <div class="bottom-row">
+                            <div class="meta">
+                                <span>${dateInfo}</span>
+                                <span>📋 ${b.consultation_type || '未指定'}</span>
+                                ${b.teacher_name ? `<span>👨‍🏫 ${b.teacher_name}</span>` : ''}
+                                ${b.room ? `<span>📍 ${b.room}</span>` : ''}
+                            </div>
+                            <div class="actions">
+                                ${actionsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        async function loadStats() {
+            try {
+                const [pendingRes, todayRes, allRes] = await Promise.all([
+                    fetch('/api/bookings/pending'),
+                    fetch(`/api/bookings/today?date=${today}`),
+                    fetch('/api/bookings/all')
+                ]);
+
+                const pending = await pendingRes.json();
+                const todayData = await todayRes.json();
+                const all = await allRes.json();
+
+                let confirmed = 0;
+                if (Array.isArray(all)) {
+                    all.forEach(b => { if (b.status === '已确认') confirmed++; });
+                }
+
+                document.getElementById('statPending').textContent = (pending && Array.isArray(pending)) ? pending.length : 0;
+                document.getElementById('statToday').textContent = (todayData && Array.isArray(todayData)) ? todayData.length : 0;
+                document.getElementById('statConfirmed').textContent = confirmed;
+                document.getElementById('statTotal').textContent = (all && Array.isArray(all)) ? all.length : 0;
+            } catch (e) {
+                console.error('加载统计失败', e);
+            }
+        }
+
+        async function openConfirmModal(bookingId) {
+            try {
+                const res = await fetch(`/api/bookings/all`);
+                const all = await res.json();
+                const booking = all.find(b => b.id === bookingId);
+
+                if (!booking) {
+                    alert('未找到该预约');
+                    return;
+                }
+
+                document.getElementById('confirmBookingId').value = bookingId;
+                document.getElementById('confirmStudentName').value = booking.student_name || '未知';
+                document.getElementById('confirmType').value = booking.consultation_type || '未指定';
+                document.getElementById('confirmDate').value = booking.booking_date || today;
+                document.getElementById('confirmTime').value = booking.booking_time || '09:00';
+                document.getElementById('confirmRoom').value = '';
+
+                document.getElementById('confirmTeacherId').value = userId;
+                document.getElementById('confirmTeacherName').value = userName;
+
+                document.getElementById('modalMsg').className = 'msg';
+                document.getElementById('modalMsg').style.display = 'none';
+
+                document.getElementById('confirmModal').classList.add('active');
+            } catch (e) {
+                alert('加载预约信息失败，请重试');
+                console.error(e);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        async function handleConfirm(e) {
+            e.preventDefault();
+            const bookingId = document.getElementById('confirmBookingId').value;
+            const teacherId = document.getElementById('confirmTeacherId').value;
+            const teacherName = document.getElementById('confirmTeacherName').value;
+            const confirmedDate = document.getElementById('confirmDate').value;
+            const confirmedTime = document.getElementById('confirmTime').value;
+            const room = document.getElementById('confirmRoom').value;
+            const modalMsg = document.getElementById('modalMsg');
+
+            if (!confirmedDate || !confirmedTime || !room) {
+                modalMsg.className = 'msg msg-error';
+                modalMsg.textContent = '请填写完整信息';
+                modalMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('teacher_id', teacherId);
+                formData.append('teacher_name', teacherName);
+                formData.append('confirmed_date', confirmedDate);
+                formData.append('confirmed_time', confirmedTime);
+                formData.append('room', room);
+
+                const res = await fetch(`/api/bookings/${bookingId}/confirm`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    modalMsg.className = 'msg msg-success';
+                    modalMsg.textContent = '✅ 预约确认成功！';
+                    modalMsg.style.display = 'block';
+                    setTimeout(() => {
+                        closeModal();
+                        loadStats();
+                        loadPending();
+                        loadToday();
+                        loadAll();
+                    }, 1000);
+                } else {
+                    modalMsg.className = 'msg msg-error';
+                    modalMsg.textContent = '❌ ' + (data.message || '确认失败');
+                    modalMsg.style.display = 'block';
+                }
+            } catch (e) {
+                modalMsg.className = 'msg msg-error';
+                modalMsg.textContent = '❌ 网络错误，请重试';
+                modalMsg.style.display = 'block';
+            }
+        }
+
+        async function rejectBooking(bookingId) {
+            if (!confirm('确认拒绝该预约吗？')) return;
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}/reject`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 已拒绝该预约');
+                    loadStats();
+                    loadPending();
+                    loadToday();
+                    loadAll();
+                } else {
+                    alert('❌ ' + (data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function completeBooking(bookingId) {
+            if (!confirm('确认该咨询已完成吗？')) return;
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}/complete`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 咨询已完成');
+                    loadStats();
+                    loadPending();
+                    loadToday();
+                    loadAll();
+                } else {
+                    alert('❌ ' + (data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        function logout() {
+            if (confirm('确认退出登录吗？')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/teacher/login';
+                return;
+            }
+            const role = localStorage.getItem('user_role') || '';
+            if (role !== 'teacher' && role !== 'admin') {
+                alert('请使用教师或管理员账号登录');
+                window.location.href = '/teacher/login';
+                return;
+            }
+            loadStats();
+            loadPending();
+        });
+    </script>
+</body>
+</html>

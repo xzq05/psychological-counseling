@@ -1,0 +1,190 @@
+<!-- templates/student_login.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生登录 - 心理咨询预约系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px 45px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+        .back-home {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s;
+        }
+        .back-home:hover {
+            color: #1e88e5;
+        }
+        .login-title {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+        .login-title h2 {
+            color: #1e88e5;
+            font-size: 24px;
+        }
+        .login-title p {
+            color: #888;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background: #1565c0;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-footer a {
+            color: #1e88e5;
+            text-decoration: none;
+        }
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <a href="/" class="back-home">← 返回首页</a>
+
+        <div class="login-title">
+            <h2>🎓 学生登录</h2>
+            <p>登录预约心理咨询</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>学号</label>
+                <input type="text" id="username" placeholder="请输入学号" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码" required>
+            </div>
+            <div id="errorMsg" class="error-msg"></div>
+            <button type="submit" class="btn-submit">登 录</button>
+        </form>
+
+        <div class="login-footer">
+            <p>
+                还没有账号？<a href="/student/register">立即注册</a>
+            </p>
+            <p>
+                <a href="/student/forgot-password">忘记密码？</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 12px; color: #ccc;">
+                <a href="/" style="color: #ccc;">返回首页</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            errorMsg.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('/api/auth/student/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('user_name', data.name);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('user_role', data.role);
+                    window.location.href = '/student';
+                } else {
+                    errorMsg.textContent = data.detail || '登录失败，请检查账号密码';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = '网络错误，请稍后重试';
+                errorMsg.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

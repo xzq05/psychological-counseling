@@ -1,0 +1,694 @@
+<!-- templates/student_dashboard.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生端 - 心理咨询预约系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        /* ===== 头部 ===== */
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .header-actions a:hover { background: rgba(255,255,255,0.3); }
+        .header-actions .user-name {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* ===== 容器 ===== */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* ===== 欢迎横幅 ===== */
+        .welcome-banner {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 16px;
+            padding: 30px 35px;
+            margin-bottom: 28px;
+            border-left: 6px solid #1a73e8;
+        }
+        .welcome-banner h2 { color: #0d47a1; font-size: 24px; margin-bottom: 6px; }
+        .welcome-banner p { color: #555; font-size: 15px; }
+
+        /* ===== 统计卡片 ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a73e8;
+        }
+        .stat-card .label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .stat-card.pending .number { color: #ff8f00; }
+        .stat-card.confirmed .number { color: #43a047; }
+        .stat-card.completed .number { color: #1a73e8; }
+
+        /* ===== Tab 切换 ===== */
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background: transparent;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) { background: #f0f4f8; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== 预约表单 ===== */
+        .booking-form {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 35px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 28px;
+        }
+        .booking-form h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .form-full { grid-column: 1 / -1; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.3);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== 预约列表 ===== */
+        .booking-list {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .booking-list h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f4f8;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .booking-item:last-child { border-bottom: none; }
+        .booking-item .info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            align-items: center;
+        }
+        .booking-item .info .date {
+            font-weight: 600;
+            color: #333;
+        }
+        .booking-item .info .detail {
+            color: #666;
+            font-size: 14px;
+        }
+        .booking-item .info .badge {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .badge-completed { background: #e3f2fd; color: #1565c0; }
+        .badge-cancelled { background: #fce4ec; color: #c62828; }
+        .badge-rejected { background: #fce4ec; color: #c62828; }
+
+        .booking-item .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .btn-sm-danger {
+            background: #e53935;
+            color: white;
+        }
+        .btn-sm-danger:hover { background: #c62828; }
+        .btn-sm-outline {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        .btn-sm-outline:hover { background: #f5f5f5; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+        /* ===== 消息提示 ===== */
+        .msg {
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .msg-error { background: #fce4ec; color: #c62828; display: block; }
+        .msg-info { background: #e3f2fd; color: #1565c0; display: block; }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; padding: 14px 16px; }
+            .header h1 { font-size: 18px; }
+            .header-actions { justify-content: center; }
+            .header-actions a { font-size: 13px; padding: 6px 12px; }
+            .container { padding: 16px 12px; }
+            .booking-form { padding: 20px 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .booking-item { flex-direction: column; align-items: stretch; }
+            .booking-item .info { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .booking-item .actions { justify-content: flex-start; }
+            .welcome-banner { padding: 20px; }
+            .welcome-banner h2 { font-size: 20px; }
+        }
+        @media (max-width: 400px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 头部 ===== -->
+    <div class="header">
+        <h1>📚 学生端 - 心理咨询预约</h1>
+        <div class="header-actions">
+            <span class="user-name" id="userName">👤 学生</span>
+            <a href="/student/change-password">🔐 修改密码</a>
+            <a href="/">🏠 返回首页</a>
+            <a href="#" onclick="logout()">🚪 退出</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ===== 欢迎横幅 ===== -->
+        <div class="welcome-banner">
+            <h2 id="welcomeMsg">欢迎回来！</h2>
+            <p>在这里你可以预约心理咨询、查看预约记录和状态。</p>
+        </div>
+
+        <!-- ===== 统计卡片 ===== -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="number" id="statPending">0</div>
+                <div class="label">⏳ 待确认</div>
+            </div>
+            <div class="stat-card confirmed">
+                <div class="number" id="statConfirmed">0</div>
+                <div class="label">✅ 已确认</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="number" id="statCompleted">0</div>
+                <div class="label">📋 已完成</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">📊 总预约</div>
+            </div>
+        </div>
+
+        <!-- ===== Tab 切换 ===== -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('new')">📝 新建预约</button>
+            <button class="tab-btn" onclick="switchTab('list')">📋 我的预约</button>
+        </div>
+
+        <!-- ===== Tab: 新建预约 ===== -->
+        <div id="tab-new" class="tab-content active">
+            <div class="booking-form">
+                <h3>📝 填写预约信息</h3>
+                <div id="formMsg" class="msg"></div>
+                <form id="bookingForm" onsubmit="handleBooking(event)">
+                    <input type="hidden" id="studentId">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" id="studentName" placeholder="请输入姓名" required>
+                        </div>
+                        <div class="form-group">
+                            <label>手机号 *</label>
+                            <input type="tel" id="studentPhone" placeholder="请输入手机号" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>性别 *</label>
+                            <select id="studentGender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>年龄 *</label>
+                            <input type="number" id="studentAge" placeholder="请输入年龄" required min="6" max="30">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>班级 *</label>
+                        <input type="text" id="studentClass" placeholder="如：高三(1)班" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>预约日期 *</label>
+                            <input type="date" id="bookingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>预约时间 *</label>
+                            <input type="time" id="bookingTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>咨询类型 *</label>
+                        <select id="consultationType" required>
+                            <option value="">请选择</option>
+                            <option value="学业压力">学业压力</option>
+                            <option value="人际关系">人际关系</option>
+                            <option value="情绪管理">情绪管理</option>
+                            <option value="家庭关系">家庭关系</option>
+                            <option value="职业规划">职业规划</option>
+                            <option value="心理测评">心理测评</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>选择老师（可选）</label>
+                        <select id="teacherSelect">
+                            <option value="">不指定（系统分配）</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label>咨询详情（可选）</label>
+                        <textarea id="consultationDetail" placeholder="请简要描述您想咨询的问题..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitBtn">提交预约</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 我的预约 ===== -->
+        <div id="tab-list" class="tab-content">
+            <div class="booking-list">
+                <h3>📋 我的预约记录</h3>
+                <div id="bookingListContainer">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>暂无预约记录</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===== 获取当前用户信息 =====
+        const userId = localStorage.getItem('user_id') || '';
+        const userName = localStorage.getItem('user_name') || '学生';
+        const username = localStorage.getItem('username') || '';
+
+        document.getElementById('userName').textContent = '👤 ' + userName;
+        document.getElementById('welcomeMsg').textContent = '欢迎回来，' + userName + '！';
+        document.getElementById('studentId').value = userId;
+        document.getElementById('studentName').value = userName;
+
+        // ===== 设置默认日期 =====
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('bookingDate').min = today;
+        document.getElementById('bookingDate').value = today;
+
+        // ===== 加载老师列表 =====
+        async function loadTeachers() {
+            try {
+                const res = await fetch('/api/teachers/list');
+                const teachers = await res.json();
+                const select = document.getElementById('teacherSelect');
+                if (Array.isArray(teachers)) {
+                    teachers.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.textContent = `${t.name}（${t.title || '心理老师'}）`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error('加载老师列表失败', e);
+            }
+        }
+        loadTeachers();
+
+        // ===== Tab 切换 =====
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'list') loadBookings();
+        }
+
+        // ===== 提交预约 =====
+        async function handleBooking(e) {
+            e.preventDefault();
+            const form = document.getElementById('bookingForm');
+            const msg = document.getElementById('formMsg');
+            const submitBtn = document.getElementById('submitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
+
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch('/api/bookings', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + (data.message || '预约提交成功！');
+                    msg.style.display = 'block';
+                    form.reset();
+                    document.getElementById('studentName').value = userName;
+                    document.getElementById('studentId').value = userId;
+                    document.getElementById('bookingDate').value = today;
+                    setTimeout(() => {
+                        loadBookings();
+                        loadStats();
+                    }, 500);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (data.detail || data.message || '提交失败，请重试');
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请稍后重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '提交预约';
+            }
+        }
+
+        // ===== 加载预约列表 =====
+        async function loadBookings() {
+            const container = document.getElementById('bookingListContainer');
+            const studentId = localStorage.getItem('user_id');
+
+            if (!studentId) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><p>请先登录</p></div>`;
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bookings/student/${studentId}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无预约记录</p></div>`;
+                    return;
+                }
+
+                let html = '';
+                data.forEach(b => {
+                    const statusMap = {
+                        '待确认': 'badge-pending',
+                        '已确认': 'badge-confirmed',
+                        '已完成': 'badge-completed',
+                        '已取消': 'badge-cancelled',
+                        '已拒绝': 'badge-rejected'
+                    };
+                    const badgeClass = statusMap[b.status] || 'badge-pending';
+
+                    let confirmInfo = '';
+                    if (b.status === '已确认' || b.status === '已完成') {
+                        confirmInfo = `
+                            <span class="detail">👨‍🏫 ${b.teacher_name || '待分配'}</span>
+                            <span class="detail">📍 ${b.room || '待定'}</span>
+                            <span class="detail">🕐 ${b.confirmed_date || b.booking_date} ${b.confirmed_time || b.booking_time}</span>
+                        `;
+                    } else {
+                        confirmInfo = `
+                            <span class="detail">📅 ${b.booking_date}</span>
+                            <span class="detail">🕐 ${b.booking_time}</span>
+                            <span class="detail">📋 ${b.consultation_type || '未指定'}</span>
+                        `;
+                    }
+
+                    html += `
+                        <div class="booking-item">
+                            <div class="info">
+                                <span class="date">#${b.queue_number || 'N/A'}</span>
+                                ${confirmInfo}
+                                <span class="badge ${badgeClass}">${b.status}</span>
+                            </div>
+                            <div class="actions">
+                                ${b.status === '待确认' || b.status === '已确认' ?
+                                    `<button class="btn-sm btn-sm-danger" onclick="cancelBooking('${b.id}')">取消</button>` :
+                                    ''
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载预约失败', e);
+            }
+        }
+
+        // ===== 取消预约 =====
+        async function cancelBooking(bookingId) {
+            if (!confirm('确认取消该预约吗？')) return;
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 已取消预约');
+                    loadBookings();
+                    loadStats();
+                } else {
+                    alert('❌ ' + (data.message || '取消失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 加载统计数据 =====
+        async function loadStats() {
+            const studentId = localStorage.getItem('user_id');
+            if (!studentId) return;
+
+            try {
+                const res = await fetch(`/api/bookings/student/${studentId}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    document.getElementById('statPending').textContent = '0';
+                    document.getElementById('statConfirmed').textContent = '0';
+                    document.getElementById('statCompleted').textContent = '0';
+                    document.getElementById('statTotal').textContent = '0';
+                    return;
+                }
+
+                let pending = 0, confirmed = 0, completed = 0;
+                data.forEach(b => {
+                    if (b.status === '待确认') pending++;
+                    else if (b.status === '已确认') confirmed++;
+                    else if (b.status === '已完成') completed++;
+                });
+
+                document.getElementById('statPending').textContent = pending;
+                document.getElementById('statConfirmed').textContent = confirmed;
+                document.getElementById('statCompleted').textContent = completed;
+                document.getElementById('statTotal').textContent = data.length;
+            } catch (e) {
+                console.error('加载统计失败', e);
+            }
+        }
+
+        // ===== 退出登录 =====
+        function logout() {
+            if (confirm('确认退出登录吗？')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        // ===== 页面加载时初始化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/student/login';
+                return;
+            }
+            loadStats();
+            loadBookings();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心理咨询预约系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* 首页专用样式 */
+        .home-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+            padding: 20px;
+        }
+
+        .home-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 60px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            max-width: 650px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .home-logo {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+
+        .home-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+
+        .home-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 35px;
+            border-bottom: 2px solid #e8f5e9;
+            padding-bottom: 20px;
+        }
+
+        .login-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .login-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 10px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid #e8f5e9;
+            background: #fafffe;
+            min-height: 120px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-btn .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .login-btn .label {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .login-btn .desc {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .login-btn.student {
+            border-color: #42a5f5;
+            background: #f5f9ff;
+        }
+        .login-btn.student:hover {
+            border-color: #1e88e5;
+            background: #e3f0ff;
+        }
+        .login-btn.student .label {
+            color: #1e88e5;
+        }
+
+        .login-btn.teacher {
+            border-color: #66bb6a;
+            background: #f5fff5;
+        }
+        .login-btn.teacher:hover {
+            border-color: #43a047;
+            background: #e8f5e9;
+        }
+        .login-btn.teacher .label {
+            color: #43a047;
+        }
+
+        .login-btn.admin {
+            border-color: #ffa726;
+            background: #fffbf5;
+        }
+        .login-btn.admin:hover {
+            border-color: #fb8c00;
+            background: #fff3e0;
+        }
+        .login-btn.admin .label {
+            color: #fb8c00;
+        }
+
+        .home-footer {
+            margin-top: 20px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .home-footer a {
+            color: #43a047;
+            text-decoration: none;
+        }
+        .home-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 520px) {
+            .home-card {
+                padding: 30px 20px;
+            }
+            .login-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .login-btn {
+                flex-direction: row;
+                min-height: 60px;
+                padding: 15px 20px;
+                gap: 15px;
+            }
+            .login-btn .icon {
+                font-size: 28px;
+                margin-bottom: 0;
+            }
+            .home-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <div class="home-card">
+            <div class="home-logo">🧠</div>
+            <h1 class="home-title">心理咨询预约系统</h1>
+            <p class="home-subtitle">选择您的角色，开始使用</p>
+
+            <div class="login-grid">
+                <!-- 学生入口 -->
+                <a href="/student/login" class="login-btn student">
+                    <span class="icon">🎓</span>
+                    <div>
+                        <div class="label">学生</div>
+                        <div class="desc">预约咨询 · 查看记录</div>
+                    </div>
+                </a>
+
+                <!-- 教师入口 -->
+                <a href="/teacher/login" class="login-btn teacher">
+                    <span class="icon">👨‍🏫</span>
+                    <div>
+                        <div class="label">教师</div>
+                        <div class="desc">确认预约 · 管理咨询</div>
+                    </div>
+                </a>
+
+                <!-- 管理员入口 - 独立登录页面 -->
+                <a href="/admin/login" class="login-btn admin">
+                    <span class="icon">⚙️</span>
+                    <div>
+                        <div class="label">管理员</div>
+                        <div class="desc">审核教师 · 用户管理</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="home-footer">
+                <p>
+                    还没有账号？
+                    <a href="/student/register">学生注册</a> ｜
+                    <a href="/teacher/register">教师注册</a>
+                </p>
+                <p style="margin-top: 8px; font-size: 12px; color: #ccc;">
+                    © 2026 心理咨询预约系统
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

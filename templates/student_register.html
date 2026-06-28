@@ -1,0 +1,226 @@
+<!-- templates/student_register.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生注册 - 心理咨询预约系统</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .register-container {
+            background: white;
+            border-radius: 16px;
+            padding: 35px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+        }
+        .back-home {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s;
+        }
+        .back-home:hover {
+            color: #1e88e5;
+        }
+        h2 {
+            text-align: center;
+            color: #1e88e5;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 5px;
+        }
+        .btn-submit:hover {
+            background: #1565c0;
+        }
+        .footer-links {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #666;
+        }
+        .footer-links a {
+            color: #1e88e5;
+            text-decoration: none;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+        .success-msg {
+            color: #2e7d32;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 480px) {
+            .register-container { padding: 25px 20px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <a href="/" class="back-home">← 返回首页</a>
+
+        <h2>🎓 学生注册</h2>
+        <p class="subtitle">填写信息，创建学生账号</p>
+
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label>学号</label>
+                <input type="text" id="username" placeholder="请输入学号" required>
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="name" placeholder="请输入姓名" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请设置密码（至少6位）" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="phone" placeholder="请输入手机号" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>班级</label>
+                    <input type="text" id="student_class" placeholder="如：高三(1)班" required>
+                </div>
+                <div class="form-group">
+                    <label>年龄</label>
+                    <input type="number" id="age" placeholder="年龄" required min="6" max="30">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>性别</label>
+                <select id="gender" required>
+                    <option value="">请选择</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+
+            <div id="errorMsg" class="error-msg"></div>
+            <div id="successMsg" class="success-msg"></div>
+
+            <button type="submit" class="btn-submit">注 册</button>
+        </form>
+
+        <div class="footer-links">
+            <p>已有账号？<a href="/student/login">去登录</a></p>
+            <p style="margin-top: 8px; font-size: 12px; color: #ccc;">
+                <a href="/" style="color: #ccc;">返回首页</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function handleRegister(e) {
+            e.preventDefault();
+            const form = document.getElementById('registerForm');
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/auth/student/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    successMsg.textContent = data.message || '注册成功！即将跳转到登录页...';
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/student/login';
+                    }, 2000);
+                } else {
+                    errorMsg.textContent = data.detail || data.message || '注册失败，请重试';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = '网络错误，请稍后重试';
+                errorMsg.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

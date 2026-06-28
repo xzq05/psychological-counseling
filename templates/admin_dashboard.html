@@ -1,0 +1,778 @@
+<!-- templates/admin_dashboard.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - 心理咨询预约系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff8f00, #e65100);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .header-actions a:hover { background: rgba(255,255,255,0.3); }
+        .header-actions .user-name {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e65100;
+        }
+        .stat-card .label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .stat-card.teachers .number { color: #2e7d32; }
+        .stat-card.students .number { color: #1a73e8; }
+
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background: transparent;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #ff8f00;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) { background: #f5f5f5; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .table-wrap {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow-x: auto;
+        }
+        .table-wrap h3 {
+            font-size: 17px;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .table-wrap h3 .count {
+            font-size: 14px;
+            color: #888;
+            font-weight: normal;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            padding: 12px 10px;
+            background: #fafafa;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #eee;
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        tr:hover td { background: #fafafa; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-verified { background: #e8f5e9; color: #2e7d32; }
+        .badge-active { background: #e3f2fd; color: #1565c0; }
+        .badge-inactive { background: #fce4ec; color: #c62828; }
+
+        .btn {
+            display: inline-block;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .btn-success { background: #43a047; color: white; }
+        .btn-success:hover { background: #2e7d32; }
+        .btn-danger { background: #e53935; color: white; }
+        .btn-danger:hover { background: #c62828; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-primary:hover { background: #0d47a1; }
+        .btn-warning { background: #ff8f00; color: white; }
+        .btn-warning:hover { background: #e67e00; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 4px; }
+
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+        .msg {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 14px;
+        }
+        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .msg-error { background: #fce4ec; color: #c62828; display: block; }
+        .msg-info { background: #e3f2fd; color: #1565c0; display: block; }
+
+        .create-form-toggle {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .create-form-toggle:hover { background: #fafafa; }
+        .create-form-toggle .arrow {
+            transition: transform 0.3s;
+            font-size: 18px;
+        }
+        .create-form-toggle .arrow.open { transform: rotate(180deg); }
+
+        .create-form-body {
+            background: white;
+            border-radius: 12px;
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .create-form-body.open {
+            padding: 24px;
+            max-height: 800px;
+            margin-bottom: 20px;
+        }
+        .create-form-body .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .create-form-body .form-group {
+            margin-bottom: 14px;
+        }
+        .create-form-body .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .create-form-body .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .create-form-body .form-group input:focus {
+            outline: none;
+            border-color: #ff8f00;
+        }
+        .create-form-body .btn-submit {
+            padding: 12px 32px;
+            background: #ff8f00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .create-form-body .btn-submit:hover { background: #e65100; }
+        .create-form-body .form-full { grid-column: 1 / -1; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; padding: 14px 16px; }
+            .header h1 { font-size: 18px; }
+            .header-actions { justify-content: center; }
+            .header-actions a { font-size: 13px; padding: 6px 12px; }
+            .container { padding: 16px 12px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .create-form-body .form-row { grid-template-columns: 1fr; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 6px; }
+            .action-btns { flex-direction: column; gap: 4px; }
+            .btn-sm { width: 100%; text-align: center; }
+        }
+        @media (max-width: 400px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚙️ 管理员后台</h1>
+        <div class="header-actions">
+            <span class="user-name" id="userName">👤 管理员</span>
+            <a href="/admin/change-password">🔐 修改密码</a>
+            <a href="/">🏠 返回首页</a>
+            <a href="#" onclick="logout()">🚪 退出</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="number" id="statPending">0</div>
+                <div class="label">⏳ 待审核教师</div>
+            </div>
+            <div class="stat-card teachers">
+                <div class="number" id="statTeachers">0</div>
+                <div class="label">👨‍🏫 已审核教师</div>
+            </div>
+            <div class="stat-card students">
+                <div class="number" id="statStudents">0</div>
+                <div class="label">🎓 学生总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">👥 用户总数</div>
+            </div>
+        </div>
+
+        <div class="create-form-toggle" onclick="toggleCreateForm()">
+            <span style="font-weight: 500;">➕ 管理员创建教师账号（免审核）</span>
+            <span class="arrow" id="createArrow">▼</span>
+        </div>
+        <div class="create-form-body" id="createFormBody">
+            <div id="createMsg" class="msg"></div>
+            <form id="createTeacherForm" onsubmit="handleCreateTeacher(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>工号 *</label>
+                        <input type="text" id="createUsername" placeholder="请输入工号" required>
+                    </div>
+                    <div class="form-group">
+                        <label>姓名 *</label>
+                        <input type="text" id="createName" placeholder="请输入姓名" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>密码 *</label>
+                        <input type="password" id="createPassword" placeholder="请设置密码（至少6位）" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>手机号 *</label>
+                        <input type="tel" id="createPhone" placeholder="请输入手机号" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>职称 *</label>
+                        <input type="text" id="createTitle" placeholder="如：高级心理咨询师" required>
+                    </div>
+                    <div class="form-group">
+                        <label>专业领域 *</label>
+                        <input type="text" id="createSpecialty" placeholder="如：青少年心理、焦虑抑郁" required>
+                    </div>
+                </div>
+                <div class="form-full" style="text-align: right; margin-top: 8px;">
+                    <button type="submit" class="btn-submit">创建教师账号</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
+            <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
+            <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
+        </div>
+
+        <div id="tab-pending" class="tab-content active">
+            <div class="table-wrap">
+                <h3>⏳ 待审核教师 <span class="count" id="pendingCount"></span></h3>
+                <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <div id="tab-teachers" class="tab-content">
+            <div class="table-wrap">
+                <h3>👨‍🏫 所有教师 <span class="count" id="teachersCount"></span></h3>
+                <div id="teacherList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <div id="tab-students" class="tab-content">
+            <div class="table-wrap">
+                <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
+                <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const userName = localStorage.getItem('user_name') || '管理员';
+        const username = localStorage.getItem('username') || '';
+        document.getElementById('userName').textContent = '👤 ' + userName;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'pending') loadPending();
+            else if (tab === 'teachers') loadTeachers();
+            else if (tab === 'students') loadStudents();
+        }
+
+        function toggleCreateForm() {
+            const body = document.getElementById('createFormBody');
+            const arrow = document.getElementById('createArrow');
+            body.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        async function loadStats() {
+            try {
+                const [pendingRes, teachersRes, studentsRes] = await Promise.all([
+                    fetch('/api/admin/teachers/pending'),
+                    fetch('/api/admin/teachers'),
+                    fetch('/api/admin/students')
+                ]);
+
+                const pending = await pendingRes.json();
+                const teachers = await teachersRes.json();
+                const students = await studentsRes.json();
+
+                const pendingCount = Array.isArray(pending) ? pending.length : 0;
+                const teacherCount = Array.isArray(teachers) ? teachers.filter(t => t.teacher_verified).length : 0;
+                const studentCount = Array.isArray(students) ? students.length : 0;
+
+                document.getElementById('statPending').textContent = pendingCount;
+                document.getElementById('statTeachers').textContent = teacherCount;
+                document.getElementById('statStudents').textContent = studentCount;
+                document.getElementById('statTotal').textContent = teacherCount + studentCount;
+
+                document.getElementById('pendingCount').textContent = `(${pendingCount} 条)`;
+                document.getElementById('teachersCount').textContent = `(${teachers.length || 0} 条)`;
+                document.getElementById('studentsCount').textContent = `(${students.length || 0} 条)`;
+            } catch (e) {
+                console.error('加载统计失败', e);
+            }
+        }
+
+        async function loadPending() {
+            const container = document.getElementById('pendingList');
+            try {
+                const res = await fetch('/api/admin/teachers/pending');
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>暂无待审核教师</p></div>`;
+                    return;
+                }
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>工号</th>
+                        <th>姓名</th>
+                        <th>手机</th>
+                        <th>职称</th>
+                        <th>专业领域</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                data.forEach(t => {
+                    html += `<tr>
+                        <td><strong>${t.username}</strong></td>
+                        <td>${t.name}</td>
+                        <td>${t.phone}</td>
+                        <td>${t.teacher_title || '-'}</td>
+                        <td>${t.teacher_specialty || '-'}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-success btn-sm" onclick="verifyTeacher('${t.id}')">✅ 通过</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectTeacher('${t.id}')">❌ 拒绝</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载待审核教师失败', e);
+            }
+        }
+
+        async function loadTeachers() {
+            const container = document.getElementById('teacherList');
+            try {
+                const res = await fetch('/api/admin/teachers');
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无教师</p></div>`;
+                    return;
+                }
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>工号</th>
+                        <th>姓名</th>
+                        <th>手机</th>
+                        <th>职称</th>
+                        <th>专业领域</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                data.forEach(t => {
+                    const statusText = t.teacher_verified ? '✅ 已审核' : '⏳ 待审核';
+                    const statusClass = t.teacher_verified ? 'badge-verified' : 'badge-pending';
+
+                    html += `<tr>
+                        <td><strong>${t.username}</strong></td>
+                        <td>${t.name}</td>
+                        <td>${t.phone}</td>
+                        <td>${t.teacher_title || '-'}</td>
+                        <td>${t.teacher_specialty || '-'}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td class="action-btns">
+                            ${!t.teacher_verified ?
+                                `<button class="btn btn-success btn-sm" onclick="verifyTeacher('${t.id}')">✅ 通过</button>` :
+                                ''
+                            }
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${t.id}')">🚫 禁用</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载教师列表失败', e);
+            }
+        }
+
+        async function loadStudents() {
+            const container = document.getElementById('studentList');
+            try {
+                const res = await fetch('/api/admin/students');
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无学生</p></div>`;
+                    return;
+                }
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>手机</th>
+                        <th>班级</th>
+                        <th>年龄</th>
+                        <th>性别</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                data.forEach(s => {
+                    const statusText = s.status === 'active' ? '✅ 正常' : '🚫 已禁用';
+                    const statusClass = s.status === 'active' ? 'badge-active' : 'badge-inactive';
+
+                    html += `<tr>
+                        <td><strong>${s.username}</strong></td>
+                        <td>${s.name}</td>
+                        <td>${s.phone}</td>
+                        <td>${s.student_class || '-'}</td>
+                        <td>${s.age || '-'}</td>
+                        <td>${s.gender || '-'}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td class="action-btns">
+                            ${s.status === 'active' ?
+                                `<button class="btn btn-danger btn-sm" onclick="deactivateUser('${s.id}')">🚫 禁用</button>` :
+                                `<button class="btn btn-success btn-sm" onclick="activateUser('${s.id}')">✅ 激活</button>`
+                            }
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
+                console.error('加载学生列表失败', e);
+            }
+        }
+
+        async function verifyTeacher(userId) {
+            if (!confirm('确认审核通过该教师账号吗？\n通过后教师将可以登录系统。')) return;
+            try {
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                const res = await fetch('/api/admin/teachers/verify', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 教师账号审核通过！');
+                    loadStats();
+                    loadPending();
+                    loadTeachers();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function rejectTeacher(userId) {
+            if (!confirm('确认拒绝该教师注册申请吗？\n该账号将被删除。')) return;
+            try {
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                const res = await fetch('/api/admin/teachers/reject', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 已拒绝该教师注册申请');
+                    loadStats();
+                    loadPending();
+                    loadTeachers();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('确认禁用该用户吗？\n禁用后用户将无法登录。')) return;
+            try {
+                const res = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 用户已禁用');
+                    loadStats();
+                    loadTeachers();
+                    loadStudents();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function activateUser(userId) {
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/activate`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 用户已激活');
+                    loadStats();
+                    loadStudents();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function deactivateUser(userId) {
+            if (!confirm('确认禁用该学生账号吗？')) return;
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/deactivate`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 学生账号已禁用');
+                    loadStats();
+                    loadStudents();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || '操作失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        async function handleCreateTeacher(e) {
+            e.preventDefault();
+            const form = document.getElementById('createTeacherForm');
+            const msg = document.getElementById('createMsg');
+            const submitBtn = form.querySelector('.btn-submit');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '创建中...';
+
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch('/api/admin/teacher', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + (data.message || '教师账号创建成功！');
+                    msg.style.display = 'block';
+                    form.reset();
+                    loadStats();
+                    loadTeachers();
+                    setTimeout(() => {
+                        msg.style.display = 'none';
+                    }, 5000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (data.detail || data.message || '创建失败，请重试');
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请稍后重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '创建教师账号';
+            }
+        }
+
+        function logout() {
+            if (confirm('确认退出登录吗？')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            const role = localStorage.getItem('user_role') || '';
+            if (role !== 'admin') {
+                alert('⚠️ 您没有管理员权限，请使用管理员账号登录');
+                window.location.href = '/admin/login';
+                return;
+            }
+            loadStats();
+            loadPending();
+        });
+    </script>
+</body>
+</html>
