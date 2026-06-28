@@ -91,6 +91,10 @@
         .btn-submit:hover {
             background: #2e7d32;
         }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .footer-links {
             text-align: center;
             margin-top: 18px;
@@ -153,34 +157,34 @@
 
         <form id="registerForm" onsubmit="handleRegister(event)">
             <div class="form-group">
-                <label>工号</label>
+                <label>工号 *</label>
                 <input type="text" id="username" placeholder="请输入工号" required>
             </div>
             <div class="form-group">
-                <label>姓名</label>
+                <label>姓名 *</label>
                 <input type="text" id="name" placeholder="请输入姓名" required>
             </div>
             <div class="form-group">
-                <label>密码</label>
+                <label>密码 *</label>
                 <input type="password" id="password" placeholder="请设置密码（至少6位）" required minlength="6">
             </div>
             <div class="form-group">
-                <label>手机号</label>
+                <label>手机号 *</label>
                 <input type="tel" id="phone" placeholder="请输入手机号" required>
             </div>
             <div class="form-group">
-                <label>职称</label>
+                <label>职称 *</label>
                 <input type="text" id="teacher_title" placeholder="如：高级心理咨询师" required>
             </div>
             <div class="form-group">
-                <label>专业领域</label>
+                <label>专业领域 *</label>
                 <input type="text" id="teacher_specialty" placeholder="如：青少年心理、焦虑抑郁" required>
             </div>
 
             <div id="errorMsg" class="error-msg"></div>
             <div id="successMsg" class="success-msg"></div>
 
-            <button type="submit" class="btn-submit">提交注册</button>
+            <button type="submit" class="btn-submit" id="submitBtn">提交注册</button>
         </form>
 
         <div class="note">
@@ -201,9 +205,12 @@
             const form = document.getElementById('registerForm');
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
+            const submitBtn = document.getElementById('submitBtn');
 
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
 
             const formData = new FormData(form);
 
@@ -216,18 +223,25 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    successMsg.textContent = data.message || '注册成功！请等待管理员审核...';
+                    successMsg.textContent = '✅ ' + (data.message || '注册成功！请等待管理员审核...');
                     successMsg.style.display = 'block';
+                    form.reset();
+                    submitBtn.textContent = '已提交';
+
                     setTimeout(() => {
                         window.location.href = '/teacher/login';
                     }, 3000);
                 } else {
                     errorMsg.textContent = data.detail || data.message || '注册失败，请重试';
                     errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '提交注册';
                 }
             } catch (err) {
                 errorMsg.textContent = '网络错误，请稍后重试';
                 errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '提交注册';
             }
         }
     </script>

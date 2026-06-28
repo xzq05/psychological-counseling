@@ -4,7 +4,7 @@ from app.repositories.user_repo import UserRepository
 from app.utils.security import hash_password, verify_password
 from datetime import datetime, timedelta
 import secrets
-import bcrypt
+import random
 
 
 class AuthService:
@@ -28,7 +28,7 @@ class AuthService:
             gender=data.get("gender")
         )
         await self.user_repo.create(user)
-        return {"success": True, "message": "注册成功"}
+        return {"success": True, "message": "注册成功，请前往登录"}
 
     async def register_teacher(self, data: dict) -> dict:
         """教师注册（需要管理员审核）"""
@@ -89,15 +89,16 @@ class AuthService:
         }
 
     async def reset_password_by_info(self, username: str, phone: str, gender: str, class_name: str) -> dict:
-        """通过验证信息重置密码，生成临时密码"""
+        """通过验证信息重置密码，生成6位随机数字临时密码"""
         user = await self.user_repo.find_by_username(username)
         if not user:
             return {"success": False, "message": "用户不存在"}
 
-        # 验证信息
+        # 验证手机号
         if user.phone != phone:
             return {"success": False, "message": "手机号不匹配"}
 
+        # 根据角色验证不同字段
         if user.role == "student":
             if user.gender != gender:
                 return {"success": False, "message": "性别不匹配"}
@@ -112,8 +113,7 @@ class AuthService:
         else:
             return {"success": False, "message": "该账号类型不支持此操作"}
 
-        # 生成临时密码（6位数字）
-        import random
+        # 生成6位随机数字密码
         temp_password = ''.join(random.choices('0123456789', k=6))
 
         # 更新密码
