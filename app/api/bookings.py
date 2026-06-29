@@ -15,7 +15,6 @@ router = APIRouter(tags=["预约"])
 templates = Jinja2Templates(directory="templates")
 
 
-# ========== 请求模型 ==========
 class BookingCreateRequest(BaseModel):
     student_id: str
     student_name: str
@@ -42,7 +41,6 @@ def get_auth_service():
     return AuthService(repo)
 
 
-# ========== 页面路由 ==========
 @router.get("/student", response_class=HTMLResponse)
 async def student_dashboard(request: Request):
     return templates.TemplateResponse("student_dashboard.html", {"request": request})
@@ -58,17 +56,14 @@ async def admin_dashboard(request: Request):
     return templates.TemplateResponse("admin_dashboard.html", {"request": request})
 
 
-# ========== API 路由 ==========
 @router.get("/api/teachers/list")
 async def get_teachers_list():
-    """获取所有心理老师列表（供学生选择）"""
     service = get_auth_service()
     return await service.get_all_teachers()
 
 
 @router.post("/api/bookings")
 async def create_booking(request: BookingCreateRequest):
-    """学生创建预约 - JSON 格式"""
     try:
         service = get_booking_service()
 
@@ -86,7 +81,6 @@ async def create_booking(request: BookingCreateRequest):
             "status": "待确认"
         }
 
-        # 如果选择了老师，保存老师信息
         if request.teacher_id:
             data["teacher_id"] = request.teacher_id
             db = get_db()
@@ -112,63 +106,41 @@ async def create_booking(request: BookingCreateRequest):
 
 @router.get("/api/bookings/student/{student_id}")
 async def get_student_bookings(student_id: str):
-    """学生查看自己的预约"""
     service = get_booking_service()
     return await service.get_student_bookings(student_id)
 
 
 @router.get("/api/bookings/pending")
 async def get_pending_bookings():
-    """教师查看待确认预约"""
     service = get_booking_service()
     return await service.get_pending_bookings()
 
 
 @router.get("/api/bookings/all")
 async def get_all_bookings():
-    """管理员查看所有预约"""
     service = get_booking_service()
     return await service.get_all_bookings()
 
 
 @router.get("/api/bookings/today")
 async def get_today_bookings(date: str = Query(..., description="日期 YYYY-MM-DD")):
-    """获取某天所有预约"""
     service = get_booking_service()
     return await service.get_today_bookings(date)
 
 
 @router.post("/api/bookings/{booking_id}/confirm")
-async def confirm_booking(
-        booking_id: str,
-        request: Request
-):
-    """教师确认预约 - JSON 格式"""
+async def confirm_booking(booking_id: str, request: Request):
     try:
         data = await request.json()
-
-        teacher_id = data.get("teacher_id")
-        teacher_name = data.get("teacher_name")
-        confirmed_date = data.get("confirmed_date")
-        confirmed_time = data.get("confirmed_time")
-        room = data.get("room")
-
-        if not all([teacher_id, teacher_name, confirmed_date, confirmed_time, room]):
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "请填写完整的确认信息"}
-            )
-
         service = get_booking_service()
         result = await service.confirm_booking(
             booking_id,
-            teacher_id,
-            teacher_name,
-            confirmed_date,
-            confirmed_time,
-            room
+            data.get("teacher_id"),
+            data.get("teacher_name"),
+            data.get("confirmed_date"),
+            data.get("confirmed_time"),
+            data.get("room")
         )
-
         return JSONResponse(
             status_code=200 if result.get("success") else 400,
             content=result
@@ -182,20 +154,17 @@ async def confirm_booking(
 
 @router.post("/api/bookings/{booking_id}/reject")
 async def reject_booking(booking_id: str):
-    """教师拒绝预约"""
     service = get_booking_service()
     return await service.reject_booking(booking_id)
 
 
 @router.delete("/api/bookings/{booking_id}/cancel")
 async def cancel_booking(booking_id: str):
-    """学生取消预约"""
     service = get_booking_service()
     return await service.cancel_booking(booking_id)
 
 
 @router.post("/api/bookings/{booking_id}/complete")
 async def complete_booking(booking_id: str):
-    """完成咨询"""
     service = get_booking_service()
     return await service.complete_booking(booking_id)
