@@ -296,14 +296,30 @@ async def delete_booking(booking_id: str):
 
 @router.delete("/bookings/all")
 async def delete_all_bookings():
+    """删除所有预约记录及相关的消息"""
     try:
         db = get_db()
-        result = await db["bookings"].delete_many({})
+
+        # 1. 直接删除所有预约记录
+        booking_result = await db["bookings"].delete_many({})
+
+        # 2. 删除相关的消息记录（包含预约关键词的消息）
+        message_result = await db["messages"].delete_many({
+            "$or": [
+                {"content": {"$regex": "预约通知"}},
+                {"content": {"$regex": "您的预约已提交"}},
+                {"content": {"$regex": "您的预约已确认"}},
+                {"content": {"$regex": "预约成功"}}
+            ]
+        })
+
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "message": f"已删除 {result.deleted_count} 条预约记录"
+                "message": f"已删除 {booking_result.deleted_count} 条预约记录，{message_result.deleted_count} 条相关消息",
+                "deleted_bookings": booking_result.deleted_count,
+                "deleted_messages": message_result.deleted_count
             }
         )
     except Exception as e:
