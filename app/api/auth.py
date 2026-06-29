@@ -36,6 +36,7 @@ class TeacherRegisterRequest(BaseModel):
     phone: str
     teacher_title: str
     teacher_specialty: str
+    teacher_gender: str  # 新增
 
 
 class LoginRequest(BaseModel):
@@ -227,6 +228,7 @@ async def teacher_login(request: LoginRequest):
 
 @router.post("/api/auth/teacher/register")
 async def register_teacher(request: TeacherRegisterRequest):
+    """教师注册 API - JSON 格式（含性别）"""
     try:
         service = get_auth_service()
         data = {
@@ -235,7 +237,8 @@ async def register_teacher(request: TeacherRegisterRequest):
             "name": request.name,
             "phone": request.phone,
             "teacher_title": request.teacher_title,
-            "teacher_specialty": request.teacher_specialty
+            "teacher_specialty": request.teacher_specialty,
+            "teacher_gender": request.teacher_gender
         }
         result = await service.register_teacher(data)
 

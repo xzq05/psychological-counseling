@@ -31,7 +31,7 @@ class AuthService:
         return {"success": True, "message": "注册成功，请前往登录"}
 
     async def register_teacher(self, data: dict) -> dict:
-        """教师注册（需要管理员审核）"""
+        """教师注册（需要管理员审核）- 含性别"""
         existing = await self.user_repo.find_by_username(data.get("username"))
         if existing:
             return {"success": False, "message": "工号已存在"}
@@ -44,6 +44,7 @@ class AuthService:
             role="teacher",
             teacher_title=data.get("teacher_title"),
             teacher_specialty=data.get("teacher_specialty"),
+            teacher_gender=data.get("teacher_gender"),  # 新增
             teacher_verified=False,
             status="active"
         )
@@ -105,7 +106,9 @@ class AuthService:
             if user.student_class != class_name:
                 return {"success": False, "message": "班级不匹配"}
         elif user.role == "teacher":
-            if user.gender != gender:
+            # 教师使用 teacher_gender 字段验证性别
+            teacher_gender = getattr(user, 'teacher_gender', None)
+            if teacher_gender != gender:
                 return {"success": False, "message": "性别不匹配"}
             if user.teacher_title != class_name:
                 return {"success": False, "message": "职称不匹配"}
@@ -155,6 +158,7 @@ class AuthService:
                     "name": t.name,
                     "title": t.teacher_title,
                     "specialty": t.teacher_specialty,
+                    "gender": getattr(t, 'teacher_gender', '未设置'),
                     "verified": True
                 })
         return result
@@ -171,6 +175,7 @@ class AuthService:
                 "phone": t.phone,
                 "teacher_title": t.teacher_title,
                 "teacher_specialty": t.teacher_specialty,
+                "teacher_gender": getattr(t, 'teacher_gender', '未设置'),
                 "teacher_verified": getattr(t, 'teacher_verified', False)
             })
         return result
@@ -193,7 +198,7 @@ class AuthService:
         return result
 
     async def get_all_teachers_full(self) -> list:
-        """获取所有教师（包括待审核）"""
+        """获取所有教师（包括待审核）- 含性别"""
         teachers = await self.user_repo.find_all_teachers()
         result = []
         for t in teachers:
@@ -204,6 +209,7 @@ class AuthService:
                 "phone": t.phone,
                 "teacher_title": t.teacher_title,
                 "teacher_specialty": t.teacher_specialty,
+                "teacher_gender": getattr(t, 'teacher_gender', '未设置'),
                 "teacher_verified": getattr(t, 'teacher_verified', False),
                 "status": t.status
             })

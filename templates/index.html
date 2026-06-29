@@ -52,7 +52,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .login-btn {
@@ -126,6 +126,105 @@
             color: #fb8c00;
         }
 
+        /* ===== 公告板样式 ===== */
+        .announcement-board {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 20px;
+            border: 1px solid #e8ecef;
+            text-align: left;
+        }
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8ecef;
+            font-weight: 600;
+            color: #333;
+        }
+        .board-header .board-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+        }
+        .board-header .board-title .badge {
+            background: #e53935;
+            color: white;
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .board-more {
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+        }
+        .board-more:hover {
+            color: #1a73e8;
+        }
+
+        .announcement-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .announcement-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .announcement-item:first-child {
+            padding-top: 10px;
+        }
+        .announcement-item .tag {
+            font-size: 10px;
+            padding: 1px 10px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+        .tag-normal {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .tag-important {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .tag-urgent {
+            background: #fce4ec;
+            color: #c62828;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .announcement-item .title {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .announcement-item .time {
+            font-size: 11px;
+            color: #bbb;
+            flex-shrink: 0;
+        }
+        .announcement-empty {
+            text-align: center;
+            padding: 15px 0;
+            color: #bbb;
+            font-size: 13px;
+        }
+
         .home-footer {
             margin-top: 20px;
             color: #999;
@@ -160,6 +259,23 @@
             }
             .home-title {
                 font-size: 24px;
+            }
+            .announcement-item {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .announcement-item .title {
+                white-space: normal;
+                width: 100%;
+                order: 1;
+                font-size: 13px;
+            }
+            .announcement-item .tag {
+                order: 0;
+            }
+            .announcement-item .time {
+                order: 2;
+                font-size: 10px;
             }
         }
     </style>
@@ -200,6 +316,20 @@
                 </a>
             </div>
 
+            <!-- ===== 公告板 ===== -->
+            <div class="announcement-board" id="announcementBoard">
+                <div class="board-header">
+                    <span class="board-title">
+                        📢 系统公告
+                        <span class="badge" id="announcementBadge" style="display:none;">新</span>
+                    </span>
+                    <span class="board-more" onclick="loadAnnouncements()">🔄 刷新</span>
+                </div>
+                <div id="announcementList">
+                    <div class="announcement-empty">加载中...</div>
+                </div>
+            </div>
+
             <div class="home-footer">
                 <p>
                     还没有账号？
@@ -212,5 +342,77 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // ===== 加载公告 =====
+        async function loadAnnouncements() {
+            const container = document.getElementById('announcementList');
+            const badge = document.getElementById('announcementBadge');
+
+            try {
+                const response = await fetch('/api/announcements');
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="announcement-empty">📭 暂无公告</div>`;
+                    badge.style.display = 'none';
+                    return;
+                }
+
+                // 显示最新3条
+                const showData = data.slice(0, 3);
+                let html = '';
+                showData.forEach(item => {
+                    const priorityMap = {
+                        0: { label: '普通', class: 'tag-normal' },
+                        1: { label: '重要', class: 'tag-important' },
+                        2: { label: '紧急', class: 'tag-urgent' }
+                    };
+                    const p = priorityMap[item.priority] || priorityMap[0];
+                    const time = new Date(item.created_at).toLocaleString('zh-CN', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    html += `
+                        <div class="announcement-item">
+                            <span class="tag ${p.class}">${p.label}</span>
+                            <span class="title">${item.title}</span>
+                            <span class="time">${time}</span>
+                        </div>
+                    `;
+                });
+
+                // 如果有更多公告
+                if (data.length > 3) {
+                    html += `<div style="text-align:center;padding-top:8px;font-size:12px;color:#999;">
+                        还有 ${data.length - 3} 条公告...
+                    </div>`;
+                }
+
+                container.innerHTML = html;
+
+                // 如果有紧急公告，显示小红点
+                const hasUrgent = data.some(item => item.priority === 2);
+                if (hasUrgent) {
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+            } catch (e) {
+                console.error('加载公告失败:', e);
+                container.innerHTML = `<div class="announcement-empty">⚠️ 加载公告失败，请刷新重试</div>`;
+            }
+        }
+
+        // ===== 页面加载时加载公告 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnnouncements();
+            // 每60秒刷新一次公告
+            setInterval(loadAnnouncements, 60000);
+        });
+    </script>
 </body>
 </html>
