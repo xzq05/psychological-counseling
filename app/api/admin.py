@@ -11,8 +11,6 @@ from bson import ObjectId
 import re
 import os
 from datetime import datetime, timedelta
-from PIL import Image
-import io
 
 router = APIRouter(prefix="/api/admin", tags=["管理员"])
 
@@ -34,7 +32,6 @@ def get_beijing_time():
 
 
 def serialize_doc(doc):
-    """序列化文档，处理ObjectId和datetime"""
     if doc:
         if "_id" in doc:
             doc["_id"] = str(doc["_id"])
@@ -434,25 +431,10 @@ async def toggle_announcement(announcement_id: str):
         )
 
 
-# ========== 帖子管理（支持图片上传、点赞、评论） ==========
+# ========== 帖子管理 ==========
 
 POST_IMAGE_DIR = "static/post_images"
 os.makedirs(POST_IMAGE_DIR, exist_ok=True)
-
-
-def compress_image(image_data, max_size=(800, 800), quality=80):
-    try:
-        img = Image.open(io.BytesIO(image_data))
-        if img.mode in ('RGBA', 'LA'):
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            background.paste(img, mask=img.split()[-1])
-            img = background
-        img.thumbnail(max_size, Image.LANCZOS)
-        output = io.BytesIO()
-        img.save(output, format='JPEG', quality=quality, optimize=True)
-        return output.getvalue()
-    except Exception as e:
-        return image_data
 
 
 @router.get("/posts")
@@ -490,15 +472,13 @@ async def create_post(
         for img in images:
             if img.filename:
                 img_data = await img.read()
-                compressed_data = compress_image(img_data)
-
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"{timestamp}_{img.filename.replace(' ', '_')}"
                 filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
                 filepath = os.path.join(POST_IMAGE_DIR, filename)
 
                 with open(filepath, "wb") as f:
-                    f.write(compressed_data)
+                    f.write(img_data)
 
                 image_urls.append(f"/static/post_images/{filename}")
 
@@ -528,7 +508,6 @@ async def create_post(
 
 @router.post("/posts/{post_id}/like")
 async def like_post(post_id: str):
-    """点赞帖子"""
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
@@ -546,7 +525,6 @@ async def like_post(post_id: str):
                 content={"success": False, "message": "帖子不存在"}
             )
 
-        # 获取最新点赞数
         post = await db["posts"].find_one({"_id": ObjectId(post_id)})
         return JSONResponse(
             status_code=200,
@@ -565,7 +543,6 @@ async def add_comment(
         comment_author: str = Form(...),
         comment_content: str = Form(...)
 ):
-    """添加评论"""
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
@@ -608,7 +585,6 @@ async def add_comment(
 
 @router.get("/posts/{post_id}")
 async def get_post_detail(post_id: str):
-    """获取帖子详情（含评论）"""
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
@@ -694,8 +670,6 @@ async def delete_all_posts():
             content={"success": False, "message": f"删除失败: {str(e)}"}
         )
 
-
-# ========== 获取所有用户 ==========
 
 @router.get("/users/all")
 async def get_all_users():

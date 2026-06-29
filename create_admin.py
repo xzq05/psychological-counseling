@@ -1,6 +1,7 @@
 import bcrypt
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
+from datetime import datetime
 
 
 async def create_admin():
@@ -14,7 +15,6 @@ async def create_admin():
     # 加密密码: 123456
     password = bcrypt.hashpw("123456".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    # 创建管理员
     admin = {
         "username": "admin",
         "password": password,
@@ -35,6 +35,4 @@ async def create_admin():
 
 
 if __name__ == "__main__":
-    from datetime import datetime
-
     asyncio.run(create_admin())
