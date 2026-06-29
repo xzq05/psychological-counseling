@@ -9,6 +9,7 @@ from app.utils.security import hash_password
 from app.models.user import User
 from bson import ObjectId
 import re
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api/admin", tags=["管理员"])
 
@@ -25,7 +26,9 @@ def is_valid_object_id(id_str):
     return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
 
 
-# ========== 教师审核 ==========
+def get_beijing_time():
+    return datetime.utcnow() + timedelta(hours=8)
+
 
 @router.get("/teachers/pending")
 async def get_pending_teachers():
@@ -50,8 +53,6 @@ async def reject_teacher(user_id: str = Form(...)):
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
-
-# ========== 管理员创建教师账号 ==========
 
 @router.post("/teacher")
 async def create_teacher(
@@ -100,8 +101,6 @@ async def create_teacher(
         )
 
 
-# ========== 管理员创建学生账号 ==========
-
 @router.post("/student")
 async def create_student(
         username: str = Form(...),
@@ -147,8 +146,6 @@ async def create_student(
             content={"success": False, "message": f"创建失败: {str(e)}"}
         )
 
-
-# ========== 用户管理 ==========
 
 @router.get("/teachers")
 async def get_all_teachers():
@@ -262,8 +259,6 @@ async def delete_user(user_id: str):
         )
 
 
-# ========== 数据管理 ==========
-
 @router.delete("/bookings/{booking_id}")
 async def delete_booking(booking_id: str):
     try:
@@ -274,15 +269,14 @@ async def delete_booking(booking_id: str):
             )
 
         db = get_db()
-        repo = BookingRepository(db)
-        booking = await repo.find_by_id(booking_id)
+        booking = await db["bookings"].find_one({"_id": ObjectId(booking_id)})
         if not booking:
             return JSONResponse(
                 status_code=404,
                 content={"success": False, "message": "预约不存在"}
             )
 
-        await repo.delete_permanently(booking_id)
+        await db["bookings"].delete_one({"_id": ObjectId(booking_id)})
         return JSONResponse(
             status_code=200,
             content={"success": True, "message": "预约已删除"}
@@ -296,19 +290,125 @@ async def delete_booking(booking_id: str):
 
 @router.delete("/bookings/all")
 async def delete_all_bookings():
-    """删除所有预约记录"""
     try:
         db = get_db()
         result = await db["bookings"].delete_many({})
         return JSONResponse(
             status_code=200,
-            content={
-                "success": True,
-                "message": f"已删除 {result.deleted_count} 条预约记录"
-            }
+            content={"success": True, "message": f"已删除 {result.deleted_count} 条预约记录"}
         )
     except Exception as e:
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": f"删除失败: {str(e)}"}
+        )
+
+
+# ========== 公告管理 ==========
+
+@router.get("/announcements")
+async def get_all_announcements():
+    try:
+        db = get_db()
+        cursor = db["announcements"].find().sort("created_at", -1)
+        announcements = []
+        async for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            announcements.append(doc)
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "data": announcements}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"获取公告失败: {str(e)}"}
+        )
+
+
+@router.post("/announcements")
+async def create_announcement(
+        title: str = Form(...),
+        content: str = Form(...),
+        priority: int = Form(0),
+        author: str = Form(...)
+):
+    try:
+        db = get_db()
+        announcement = {
+            "title": title,
+            "content": content,
+            "priority": priority,
+            "author": author,
+            "is_active": True,
+            "created_at": get_beijing_time(),
+            "updated_at": get_beijing_time()
+        }
+        result = await db["announcements"].insert_one(announcement)
+
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "公告创建成功", "id": str(result.inserted_id)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"创建公告失败: {str(e)}"}
+        )
+
+
+@router.delete("/announcements/{announcement_id}")
+async def delete_announcement(announcement_id: str):
+    try:
+        if not is_valid_object_id(announcement_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的公告ID"}
+            )
+
+        db = get_db()
+        await db["announcements"].delete_one({"_id": ObjectId(announcement_id)})
+
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "公告删除成功"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"删除公告失败: {str(e)}"}
+        )
+
+
+@router.post("/announcements/{announcement_id}/toggle")
+async def toggle_announcement(announcement_id: str):
+    try:
+        if not is_valid_object_id(announcement_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的公告ID"}
+            )
+
+        db = get_db()
+        announcement = await db["announcements"].find_one({"_id": ObjectId(announcement_id)})
+        if not announcement:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "公告不存在"}
+            )
+
+        new_status = not announcement.get("is_active", True)
+        await db["announcements"].update_one(
+            {"_id": ObjectId(announcement_id)},
+            {"$set": {"is_active": new_status}}
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": f"公告已{'启用' if new_status else '禁用'}"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"操作失败: {str(e)}"}
         )
