@@ -384,101 +384,6 @@
             flex-wrap: wrap;
             align-items: center;
         }
-        .post-item .post-actions .like-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #666;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        .post-item .post-actions .like-btn:hover {
-            background: #f0f0f0;
-            color: #e53935;
-        }
-        .post-item .post-actions .like-btn.liked {
-            color: #e53935;
-        }
-        .post-item .post-actions .comment-toggle {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #1a73e8;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .post-item .post-actions .comment-toggle:hover {
-            background: #e3f2fd;
-        }
-        .post-item .post-actions .delete-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #e53935;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .post-item .post-actions .delete-btn:hover {
-            background: #fce4ec;
-        }
-
-        .comment-section {
-            margin-top: 10px;
-            padding: 12px 16px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            display: none;
-        }
-        .comment-section.show {
-            display: block;
-        }
-        .comment-section .comment-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-        }
-        .comment-section .comment-item:last-child { border-bottom: none; }
-        .comment-section .comment-item .comment-author {
-            font-weight: 600;
-            color: #333;
-        }
-        .comment-section .comment-item .comment-time {
-            font-size: 12px;
-            color: #999;
-            margin-left: 8px;
-        }
-        .comment-section .comment-input-area {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .comment-section .comment-input-area input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-        .comment-section .comment-input-area input:focus {
-            border-color: #1a73e8;
-        }
-        .comment-section .comment-input-area button {
-            padding: 8px 16px;
-            background: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .comment-section .comment-input-area button:hover {
-            background: #0d47a1;
-        }
 
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
@@ -493,7 +398,6 @@
             .action-btns { flex-direction: column; gap: 4px; }
             .btn-sm { width: 100%; text-align: center; }
             .data-card { flex-direction: column; text-align: center; }
-            .post-item .post-meta { flex-direction: column; gap: 4px; }
         }
         @media (max-width: 400px) {
             .stats-grid { grid-template-columns: 1fr; }
@@ -649,6 +553,7 @@
             <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
             <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
             <button class="tab-btn" onclick="switchTab('bookings')">📋 预约管理</button>
+            <button class="tab-btn" onclick="switchTab('posts')">📝 帖子管理</button>
             <button class="tab-btn" onclick="switchTab('announcements')">📢 公告管理</button>
             <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
         </div>
@@ -683,6 +588,16 @@
                 <h3>📋 所有预约记录 <span class="count" id="bookingsCount"></span></h3>
                 <div id="bookingsList">
                     <div class="empty-state"><div class="icon">📋</div><p>加载中...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 帖子管理 ===== -->
+        <div id="tab-posts" class="tab-content">
+            <div class="table-wrap">
+                <h3>📝 帖子管理</h3>
+                <div id="postList">
+                    <div class="empty-state"><div class="icon">📝</div><p>加载中...</p></div>
                 </div>
             </div>
         </div>
@@ -738,13 +653,6 @@
                 <div style="padding: 10px 0;">
                     <div class="data-card">
                         <div class="info">
-                            <strong>📋 删除所有预约记录</strong>
-                            <p>此操作将永久删除所有预约数据，不可恢复！</p>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteAllBookings()">🗑️ 删除所有预约</button>
-                    </div>
-                    <div class="data-card">
-                        <div class="info">
                             <strong>👤 删除所有学生账号</strong>
                             <p>此操作将永久删除所有学生账号，不可恢复！</p>
                         </div>
@@ -756,13 +664,6 @@
                             <p>此操作将永久删除所有教师账号，不可恢复！</p>
                         </div>
                         <button class="btn btn-danger" onclick="deleteAllTeachers()">🗑️ 删除所有教师</button>
-                    </div>
-                    <div class="data-card">
-                        <div class="info">
-                            <strong>📝 删除所有帖子</strong>
-                            <p>此操作将永久删除所有帖子数据，不可恢复！</p>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteAllPosts()">🗑️ 删除所有帖子</button>
                     </div>
                 </div>
             </div>
@@ -806,6 +707,7 @@
             else if (tab === 'teachers') loadTeachers();
             else if (tab === 'students') loadStudents();
             else if (tab === 'bookings') loadBookingsAdmin();
+            else if (tab === 'posts') loadPostsAdmin();
             else if (tab === 'announcements') loadAnnouncements();
         }
 
@@ -1102,6 +1004,72 @@
             }
         }
 
+        // ===== 加载帖子管理 =====
+        async function loadPostsAdmin() {
+            const container = document.getElementById('postList');
+            try {
+                const res = await fetch('/api/admin/posts');
+                const result = await res.json();
+
+                if (!result.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>`;
+                    return;
+                }
+
+                if (!result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>暂无帖子</p></div>`;
+                    return;
+                }
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>分类</th>
+                        <th>点赞</th>
+                        <th>评论</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                result.data.forEach(item => {
+                    html += `<tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.author || '匿名'}</td>
+                        <td>${item.category || '未分类'}</td>
+                        <td>❤️ ${item.likes || 0}</td>
+                        <td>💬 ${item.comments_count || 0}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deletePostAdmin('${item._id}')">🗑️ 删除</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载帖子失败:', e);
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败</p></div>`;
+            }
+        }
+
+        async function deletePostAdmin(postId) {
+            if (!confirm('⚠️ 确认删除该帖子吗？此操作不可恢复！')) return;
+            try {
+                const res = await fetch(`/api/admin/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 帖子已删除');
+                    loadPostsAdmin();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
         // ===== 审核通过教师 =====
         async function verifyTeacher(userId) {
             if (!confirm('确认审核通过该教师账号吗？\n通过后教师将可以登录系统。')) return;
@@ -1306,31 +1274,6 @@
             }
         }
 
-        // ===== 删除所有预约 =====
-        async function deleteAllBookings() {
-            if (!confirm('⚠️ 此操作将永久删除所有预约记录，不可恢复！确认继续？')) return;
-            if (!confirm('再次确认：删除所有预约数据？')) return;
-
-            try {
-                const response = await fetch('/api/admin/bookings/all', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ ' + (data.message || '所有预约已删除'));
-                    loadStats();
-                } else {
-                    alert('❌ ' + (data.message || '删除失败'));
-                }
-            } catch (e) {
-                alert('网络错误，请重试');
-                console.error('删除所有预约错误:', e);
-            }
-        }
-
         // ===== 删除所有学生 =====
         async function deleteAllStudents() {
             if (!confirm('⚠️ 此操作将永久删除所有学生账号，不可恢复！确认继续？')) return;
@@ -1377,26 +1320,6 @@
                 loadStats();
                 loadTeachers();
                 loadPending();
-            } catch (e) {
-                alert('网络错误，请重试');
-            }
-        }
-
-        // ===== 删除所有帖子 =====
-        async function deleteAllPosts() {
-            if (!confirm('⚠️ 此操作将永久删除所有帖子，不可恢复！确认继续？')) return;
-            if (!confirm('再次确认：删除所有帖子？')) return;
-
-            try {
-                const res = await fetch('/api/admin/posts/all', {
-                    method: 'DELETE'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ ' + (data.message || '所有帖子已删除'));
-                } else {
-                    alert('❌ ' + (data.message || '删除失败'));
-                }
             } catch (e) {
                 alert('网络错误，请重试');
             }
@@ -1583,6 +1506,7 @@
             loadStats();
             loadPending();
             loadBookingsAdmin();
+            loadPostsAdmin();
             loadAnnouncements();
             checkUnreadMessages();
             setInterval(checkUnreadMessages, 30000);
