@@ -1,5 +1,5 @@
-# app/api/admin.py - 修复公告和帖子接口
-from fastapi import APIRouter, HTTPException, Form, Query
+# app/api/admin.py
+from fastapi import APIRouter, HTTPException, Form, Query, UploadFile, File
 from fastapi.responses import JSONResponse
 from app.database import get_db
 from app.repositories.user_repo import UserRepository
@@ -9,7 +9,10 @@ from app.utils.security import hash_password
 from app.models.user import User
 from bson import ObjectId
 import re
+import os
 from datetime import datetime, timedelta
+from PIL import Image
+import io
 
 router = APIRouter(prefix="/api/admin", tags=["管理员"])
 
@@ -30,15 +33,17 @@ def get_beijing_time():
     return datetime.utcnow() + timedelta(hours=8)
 
 
-def serialize_datetime(obj):
-    """递归处理 datetime 对象"""
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif isinstance(obj, dict):
-        return {k: serialize_datetime(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [serialize_datetime(item) for item in obj]
-    return obj
+def serialize_doc(doc):
+    """序列化文档，处理ObjectId和datetime"""
+    if doc:
+        if "_id" in doc:
+            doc["_id"] = str(doc["_id"])
+        for key, value in doc.items():
+            if isinstance(value, datetime):
+                doc[key] = value.isoformat()
+            elif isinstance(value, ObjectId):
+                doc[key] = str(value)
+    return doc
 
 
 # ========== 教师审核 ==========
@@ -334,12 +339,7 @@ async def get_all_announcements():
         cursor = db["announcements"].find().sort("created_at", -1)
         announcements = []
         async for doc in cursor:
-            # 转换 ObjectId 和 datetime
-            doc["_id"] = str(doc["_id"])
-            if "created_at" in doc and isinstance(doc["created_at"], datetime):
-                doc["created_at"] = doc["created_at"].isoformat()
-            if "updated_at" in doc and isinstance(doc["updated_at"], datetime):
-                doc["updated_at"] = doc["updated_at"].isoformat()
+            doc = serialize_doc(doc)
             announcements.append(doc)
         return JSONResponse(
             status_code=200,
@@ -434,7 +434,26 @@ async def toggle_announcement(announcement_id: str):
         )
 
 
-# ========== 帖子管理 ==========
+# ========== 帖子管理（支持图片上传、点赞、评论） ==========
+
+POST_IMAGE_DIR = "static/post_images"
+os.makedirs(POST_IMAGE_DIR, exist_ok=True)
+
+
+def compress_image(image_data, max_size=(800, 800), quality=80):
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        if img.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        img.thumbnail(max_size, Image.LANCZOS)
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=quality, optimize=True)
+        return output.getvalue()
+    except Exception as e:
+        return image_data
+
 
 @router.get("/posts")
 async def get_all_posts():
@@ -443,11 +462,7 @@ async def get_all_posts():
         cursor = db["posts"].find().sort("created_at", -1)
         posts = []
         async for doc in cursor:
-            doc["_id"] = str(doc["_id"])
-            if "created_at" in doc and isinstance(doc["created_at"], datetime):
-                doc["created_at"] = doc["created_at"].isoformat()
-            if "updated_at" in doc and isinstance(doc["updated_at"], datetime):
-                doc["updated_at"] = doc["updated_at"].isoformat()
+            doc = serialize_doc(doc)
             posts.append(doc)
         return JSONResponse(
             status_code=200,
@@ -465,16 +480,36 @@ async def create_post(
         title: str = Form(...),
         content: str = Form(...),
         category: str = Form("其他"),
-        author: str = Form(...)
+        author: str = Form(...),
+        images: List[UploadFile] = File(default=[])
 ):
     try:
         db = get_db()
+
+        image_urls = []
+        for img in images:
+            if img.filename:
+                img_data = await img.read()
+                compressed_data = compress_image(img_data)
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{timestamp}_{img.filename.replace(' ', '_')}"
+                filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
+                filepath = os.path.join(POST_IMAGE_DIR, filename)
+
+                with open(filepath, "wb") as f:
+                    f.write(compressed_data)
+
+                image_urls.append(f"/static/post_images/{filename}")
+
         post = {
             "title": title,
             "content": content,
             "category": category,
             "author": author,
+            "images": image_urls,
             "likes": 0,
+            "comments": [],
             "comments_count": 0,
             "created_at": get_beijing_time(),
             "updated_at": get_beijing_time()
@@ -491,6 +526,114 @@ async def create_post(
         )
 
 
+@router.post("/posts/{post_id}/like")
+async def like_post(post_id: str):
+    """点赞帖子"""
+    try:
+        if not is_valid_object_id(post_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的帖子ID"}
+            )
+        db = get_db()
+        result = await db["posts"].update_one(
+            {"_id": ObjectId(post_id)},
+            {"$inc": {"likes": 1}}
+        )
+        if result.modified_count == 0:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "帖子不存在"}
+            )
+
+        # 获取最新点赞数
+        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "点赞成功", "likes": post.get("likes", 0)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"点赞失败: {str(e)}"}
+        )
+
+
+@router.post("/posts/{post_id}/comment")
+async def add_comment(
+        post_id: str,
+        comment_author: str = Form(...),
+        comment_content: str = Form(...)
+):
+    """添加评论"""
+    try:
+        if not is_valid_object_id(post_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的帖子ID"}
+            )
+        db = get_db()
+
+        comment = {
+            "id": str(ObjectId()),
+            "author": comment_author,
+            "content": comment_content,
+            "created_at": get_beijing_time().isoformat()
+        }
+
+        result = await db["posts"].update_one(
+            {"_id": ObjectId(post_id)},
+            {
+                "$push": {"comments": comment},
+                "$inc": {"comments_count": 1}
+            }
+        )
+
+        if result.modified_count == 0:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "帖子不存在"}
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "评论成功", "comment": comment}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"评论失败: {str(e)}"}
+        )
+
+
+@router.get("/posts/{post_id}")
+async def get_post_detail(post_id: str):
+    """获取帖子详情（含评论）"""
+    try:
+        if not is_valid_object_id(post_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的帖子ID"}
+            )
+        db = get_db()
+        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "帖子不存在"}
+            )
+        post = serialize_doc(post)
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "data": post}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"获取帖子失败: {str(e)}"}
+        )
+
+
 @router.delete("/posts/{post_id}")
 async def delete_post(post_id: str):
     try:
@@ -500,6 +643,18 @@ async def delete_post(post_id: str):
                 content={"success": False, "message": "无效的帖子ID"}
             )
         db = get_db()
+
+        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+        if post and "images" in post:
+            for img_url in post["images"]:
+                filename = img_url.replace("/static/post_images/", "")
+                filepath = os.path.join(POST_IMAGE_DIR, filename)
+                if os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except:
+                        pass
+
         await db["posts"].delete_one({"_id": ObjectId(post_id)})
         return JSONResponse(
             status_code=200,
@@ -516,6 +671,18 @@ async def delete_post(post_id: str):
 async def delete_all_posts():
     try:
         db = get_db()
+        cursor = db["posts"].find()
+        async for post in cursor:
+            if "images" in post:
+                for img_url in post["images"]:
+                    filename = img_url.replace("/static/post_images/", "")
+                    filepath = os.path.join(POST_IMAGE_DIR, filename)
+                    if os.path.exists(filepath):
+                        try:
+                            os.remove(filepath)
+                        except:
+                            pass
+
         result = await db["posts"].delete_many({})
         return JSONResponse(
             status_code=200,
@@ -528,7 +695,7 @@ async def delete_all_posts():
         )
 
 
-# ========== 获取所有用户（用于Admin聊天） ==========
+# ========== 获取所有用户 ==========
 
 @router.get("/users/all")
 async def get_all_users():
@@ -537,11 +704,9 @@ async def get_all_users():
         cursor = db["users"].find({"status": "active"}).sort("created_at", -1)
         users = []
         async for doc in cursor:
-            doc["_id"] = str(doc["_id"])
-            if "created_at" in doc and isinstance(doc["created_at"], datetime):
-                doc["created_at"] = doc["created_at"].isoformat()
+            doc = serialize_doc(doc)
             users.append({
-                "id": doc["_id"],
+                "id": doc.get("_id"),
                 "username": doc.get("username", ""),
                 "name": doc.get("name", ""),
                 "role": doc.get("role", "student"),
