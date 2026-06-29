@@ -1,4 +1,4 @@
-# app/api/admin.py
+# app/api/admin.py - 公告部分修复
 from fastapi import APIRouter, HTTPException, Form, Query
 from fastapi.responses import JSONResponse
 from app.database import get_db
@@ -7,6 +7,7 @@ from app.repositories.booking_repo import BookingRepository
 from app.services.auth_service import AuthService
 from app.utils.security import hash_password
 from app.models.user import User
+from app.models.message import Message
 from bson import ObjectId
 import re
 from datetime import datetime, timedelta
@@ -29,6 +30,8 @@ def is_valid_object_id(id_str):
 def get_beijing_time():
     return datetime.utcnow() + timedelta(hours=8)
 
+
+# ========== 教师审核 ==========
 
 @router.get("/teachers/pending")
 async def get_pending_teachers():
@@ -53,6 +56,8 @@ async def reject_teacher(user_id: str = Form(...)):
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
+
+# ========== 管理员创建教师账号 ==========
 
 @router.post("/teacher")
 async def create_teacher(
@@ -101,6 +106,8 @@ async def create_teacher(
         )
 
 
+# ========== 管理员创建学生账号 ==========
+
 @router.post("/student")
 async def create_student(
         username: str = Form(...),
@@ -146,6 +153,8 @@ async def create_student(
             content={"success": False, "message": f"创建失败: {str(e)}"}
         )
 
+
+# ========== 用户管理 ==========
 
 @router.get("/teachers")
 async def get_all_teachers():
@@ -259,6 +268,8 @@ async def delete_user(user_id: str):
         )
 
 
+# ========== 数据管理 ==========
+
 @router.delete("/bookings/{booking_id}")
 async def delete_booking(booking_id: str):
     try:
@@ -310,6 +321,7 @@ async def delete_all_bookings():
 async def get_all_announcements():
     try:
         db = get_db()
+        # 获取所有公告，按创建时间倒序
         cursor = db["announcements"].find().sort("created_at", -1)
         announcements = []
         async for doc in cursor:
@@ -345,7 +357,6 @@ async def create_announcement(
             "updated_at": get_beijing_time()
         }
         result = await db["announcements"].insert_one(announcement)
-
         return JSONResponse(
             status_code=200,
             content={"success": True, "message": "公告创建成功", "id": str(result.inserted_id)}
@@ -365,10 +376,8 @@ async def delete_announcement(announcement_id: str):
                 status_code=400,
                 content={"success": False, "message": "无效的公告ID"}
             )
-
         db = get_db()
         await db["announcements"].delete_one({"_id": ObjectId(announcement_id)})
-
         return JSONResponse(
             status_code=200,
             content={"success": True, "message": "公告删除成功"}
@@ -388,7 +397,6 @@ async def toggle_announcement(announcement_id: str):
                 status_code=400,
                 content={"success": False, "message": "无效的公告ID"}
             )
-
         db = get_db()
         announcement = await db["announcements"].find_one({"_id": ObjectId(announcement_id)})
         if not announcement:
@@ -396,13 +404,11 @@ async def toggle_announcement(announcement_id: str):
                 status_code=404,
                 content={"success": False, "message": "公告不存在"}
             )
-
         new_status = not announcement.get("is_active", True)
         await db["announcements"].update_one(
             {"_id": ObjectId(announcement_id)},
             {"$set": {"is_active": new_status}}
         )
-
         return JSONResponse(
             status_code=200,
             content={"success": True, "message": f"公告已{'启用' if new_status else '禁用'}"}
@@ -411,4 +417,123 @@ async def toggle_announcement(announcement_id: str):
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": f"操作失败: {str(e)}"}
+        )
+
+
+# ========== 帖子管理 ==========
+
+@router.get("/posts")
+async def get_all_posts():
+    try:
+        db = get_db()
+        cursor = db["posts"].find().sort("created_at", -1)
+        posts = []
+        async for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            posts.append(doc)
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "data": posts}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"获取帖子失败: {str(e)}"}
+        )
+
+
+@router.post("/posts")
+async def create_post(
+        title: str = Form(...),
+        content: str = Form(...),
+        category: str = Form("其他"),
+        author: str = Form(...)
+):
+    try:
+        db = get_db()
+        post = {
+            "title": title,
+            "content": content,
+            "category": category,
+            "author": author,
+            "likes": 0,
+            "comments_count": 0,
+            "created_at": get_beijing_time(),
+            "updated_at": get_beijing_time()
+        }
+        result = await db["posts"].insert_one(post)
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "帖子发布成功", "id": str(result.inserted_id)}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"发布帖子失败: {str(e)}"}
+        )
+
+
+@router.delete("/posts/{post_id}")
+async def delete_post(post_id: str):
+    try:
+        if not is_valid_object_id(post_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的帖子ID"}
+            )
+        db = get_db()
+        await db["posts"].delete_one({"_id": ObjectId(post_id)})
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "帖子删除成功"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"删除帖子失败: {str(e)}"}
+        )
+
+
+@router.delete("/posts/all")
+async def delete_all_posts():
+    try:
+        db = get_db()
+        result = await db["posts"].delete_many({})
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": f"已删除 {result.deleted_count} 条帖子"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"删除失败: {str(e)}"}
+        )
+
+
+# ========== 获取所有用户（用于Admin聊天） ==========
+
+@router.get("/users/all")
+async def get_all_users():
+    """获取所有用户（供Admin发起聊天）"""
+    try:
+        db = get_db()
+        cursor = db["users"].find({"status": "active"}).sort("created_at", -1)
+        users = []
+        async for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            users.append({
+                "id": doc["_id"],
+                "username": doc.get("username", ""),
+                "name": doc.get("name", ""),
+                "role": doc.get("role", "student"),
+                "phone": doc.get("phone", "")
+            })
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "data": users}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"获取用户失败: {str(e)}"}
         )

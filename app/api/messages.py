@@ -1,4 +1,4 @@
-# app/api/messages.py
+# app/api/messages.py - 添加Admin聊天功能
 from fastapi import APIRouter, HTTPException, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -79,7 +79,6 @@ async def get_chat_users(user_id: str):
                 messages = await repo.find_by_users(user_id, uid, limit=1)
                 last_message = messages[0].content if messages else ""
                 last_time = messages[0].created_at if messages else ""
-                # 确保时间是字符串
                 if isinstance(last_time, datetime):
                     last_time = last_time.isoformat()
                 elif not last_time:
@@ -93,6 +92,26 @@ async def get_chat_users(user_id: str):
                     "last_time": last_time
                 })
 
+        # 如果是Admin，获取所有用户（即使没有聊天记录）
+        from app.repositories.user_repo import UserRepository
+        db = get_db()
+        user_repo = UserRepository(db)
+        admin = await user_repo.find_by_id(user_id)
+
+        if admin and admin.role == "admin":
+            # 获取所有活跃用户
+            all_users = await user_repo.find_all()
+            existing_ids = [u["id"] for u in users]
+            for u in all_users:
+                if u.id != user_id and u.id not in existing_ids:
+                    users.append({
+                        "id": u.id,
+                        "name": u.name,
+                        "role": u.role,
+                        "last_message": "点击开始聊天",
+                        "last_time": ""
+                    })
+
         return sorted(users, key=lambda x: x["last_time"], reverse=True)
     except Exception as e:
         return []
@@ -105,7 +124,6 @@ async def get_messages(user1_id: str, user2_id: str, limit: int = 50):
         messages = await repo.find_by_users(user1_id, user2_id, limit)
         await repo.mark_all_read(user1_id, user2_id)
 
-        # 转换为 JSON 可序列化的格式
         result = []
         for m in messages:
             data = m.model_dump()
@@ -134,7 +152,6 @@ async def send_message(request: SendMessageRequest):
         )
         result = await repo.create(message)
 
-        # 转换返回数据
         data = result.model_dump()
         if 'created_at' in data and isinstance(data['created_at'], datetime):
             data['created_at'] = data['created_at'].isoformat()
