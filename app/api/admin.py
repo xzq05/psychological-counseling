@@ -430,7 +430,7 @@ async def toggle_announcement(announcement_id: str):
         )
 
 
-# ========== 帖子管理（无图片） ==========
+# ========== 帖子管理（所有登录用户可发布） ==========
 
 @router.get("/posts")
 async def get_all_posts():
@@ -577,6 +577,7 @@ async def get_post_detail(post_id: str):
                 content={"success": False, "message": "帖子不存在"}
             )
         post = serialize_doc(post)
+        post["isLiked"] = False
         return JSONResponse(
             status_code=200,
             content={"success": True, "data": post}
@@ -606,6 +607,49 @@ async def delete_post(post_id: str):
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": f"删除帖子失败: {str(e)}"}
+        )
+
+
+@router.delete("/posts/{post_id}/comment/{comment_id}")
+async def delete_comment(post_id: str, comment_id: str):
+    """删除评论"""
+    try:
+        if not is_valid_object_id(post_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的帖子ID"}
+            )
+
+        db = get_db()
+        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "帖子不存在"}
+            )
+
+        result = await db["posts"].update_one(
+            {"_id": ObjectId(post_id)},
+            {
+                "$pull": {"comments": {"id": comment_id}},
+                "$inc": {"comments_count": -1}
+            }
+        )
+
+        if result.modified_count == 0:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "评论不存在"}
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "评论已删除"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"删除评论失败: {str(e)}"}
         )
 
 
