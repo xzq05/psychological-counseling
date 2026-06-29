@@ -27,17 +27,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 确保 static 目录存在
 static_dir = "static"
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
     os.makedirs(os.path.join(static_dir, "css"))
     os.makedirs(os.path.join(static_dir, "js"))
-    os.makedirs(os.path.join(static_dir, "post_images"))
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 注册路由
 app.include_router(auth_router)
 app.include_router(bookings_router)
 app.include_router(admin_router)

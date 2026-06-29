@@ -1,5 +1,5 @@
 # app/api/admin.py
-from fastapi import APIRouter, HTTPException, Form, Query, UploadFile, File
+from fastapi import APIRouter, HTTPException, Form, Query
 from fastapi.responses import JSONResponse
 from app.database import get_db
 from app.repositories.user_repo import UserRepository
@@ -9,7 +9,6 @@ from app.utils.security import hash_password
 from app.models.user import User
 from bson import ObjectId
 import re
-import os
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api/admin", tags=["管理员"])
@@ -431,11 +430,7 @@ async def toggle_announcement(announcement_id: str):
         )
 
 
-# ========== 帖子管理 ==========
-
-POST_IMAGE_DIR = "static/post_images"
-os.makedirs(POST_IMAGE_DIR, exist_ok=True)
-
+# ========== 帖子管理（无图片） ==========
 
 @router.get("/posts")
 async def get_all_posts():
@@ -462,32 +457,15 @@ async def create_post(
         title: str = Form(...),
         content: str = Form(...),
         category: str = Form("其他"),
-        author: str = Form(...),
-        images: List[UploadFile] = File(default=[])
+        author: str = Form(...)
 ):
     try:
         db = get_db()
-
-        image_urls = []
-        for img in images:
-            if img.filename:
-                img_data = await img.read()
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{timestamp}_{img.filename.replace(' ', '_')}"
-                filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
-                filepath = os.path.join(POST_IMAGE_DIR, filename)
-
-                with open(filepath, "wb") as f:
-                    f.write(img_data)
-
-                image_urls.append(f"/static/post_images/{filename}")
-
         post = {
             "title": title,
             "content": content,
             "category": category,
             "author": author,
-            "images": image_urls,
             "likes": 0,
             "comments": [],
             "comments_count": 0,
@@ -619,18 +597,6 @@ async def delete_post(post_id: str):
                 content={"success": False, "message": "无效的帖子ID"}
             )
         db = get_db()
-
-        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
-        if post and "images" in post:
-            for img_url in post["images"]:
-                filename = img_url.replace("/static/post_images/", "")
-                filepath = os.path.join(POST_IMAGE_DIR, filename)
-                if os.path.exists(filepath):
-                    try:
-                        os.remove(filepath)
-                    except:
-                        pass
-
         await db["posts"].delete_one({"_id": ObjectId(post_id)})
         return JSONResponse(
             status_code=200,
@@ -647,18 +613,6 @@ async def delete_post(post_id: str):
 async def delete_all_posts():
     try:
         db = get_db()
-        cursor = db["posts"].find()
-        async for post in cursor:
-            if "images" in post:
-                for img_url in post["images"]:
-                    filename = img_url.replace("/static/post_images/", "")
-                    filepath = os.path.join(POST_IMAGE_DIR, filename)
-                    if os.path.exists(filepath):
-                        try:
-                            os.remove(filepath)
-                        except:
-                            pass
-
         result = await db["posts"].delete_many({})
         return JSONResponse(
             status_code=200,
