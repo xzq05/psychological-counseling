@@ -28,8 +28,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# 设置模板
 templates = Jinja2Templates(directory="templates")
 
+# 确保 static 目录存在
 static_dir = "static"
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
@@ -49,16 +51,25 @@ app.include_router(posts_router)
 # ===== 页面路由 =====
 @app.get("/post_detail")
 async def post_detail_page(request: Request, id: str):
+    """帖子详情页面"""
     return templates.TemplateResponse("post_detail.html", {"request": request, "post_id": id})
 
 
 @app.get("/post_edit")
 async def post_edit_page(request: Request, id: str):
+    """帖子编辑页面"""
     return templates.TemplateResponse("post_edit.html", {"request": request, "post_id": id})
+
+
+@app.get("/posts")
+async def posts_list_page(request: Request):
+    """全部帖子列表页面"""
+    return templates.TemplateResponse("posts_list.html", {"request": request})
 
 
 @app.get("/health")
 async def health_check():
+    """健康检查"""
     return {
         "status": "healthy",
         "service": "心理咨询预约系统",
@@ -68,6 +79,7 @@ async def health_check():
 
 @app.get("/api/health/db")
 async def db_health_check():
+    """数据库健康检查"""
     from app.database import get_db
     try:
         db = get_db()
