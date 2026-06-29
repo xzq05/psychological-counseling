@@ -13,7 +13,6 @@
             min-height: 100vh;
         }
 
-        /* ===== 头部 ===== */
         .header {
             background: linear-gradient(135deg, #1a73e8, #0d47a1);
             color: white;
@@ -53,7 +52,6 @@
             padding: 24px 20px;
         }
 
-        /* ===== 欢迎横幅 ===== */
         .welcome-banner {
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             border-radius: 16px;
@@ -64,7 +62,6 @@
         .welcome-banner h2 { color: #0d47a1; font-size: 24px; margin-bottom: 6px; }
         .welcome-banner p { color: #555; font-size: 15px; }
 
-        /* ===== 统计卡片 ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -92,7 +89,6 @@
         .stat-card.confirmed .number { color: #43a047; }
         .stat-card.completed .number { color: #1a73e8; }
 
-        /* ===== Tab 切换 ===== */
         .tab-bar {
             display: flex;
             gap: 6px;
@@ -135,7 +131,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* ===== 预约表单 ===== */
         .booking-form {
             background: white;
             border-radius: 16px;
@@ -211,7 +206,6 @@
             transform: none;
         }
 
-        /* ===== 预约列表 ===== */
         .booking-list {
             background: white;
             border-radius: 16px;
@@ -279,12 +273,6 @@
             color: white;
         }
         .btn-sm-danger:hover { background: #c62828; }
-        .btn-sm-outline {
-            background: transparent;
-            color: #666;
-            border: 1px solid #ddd;
-        }
-        .btn-sm-outline:hover { background: #f5f5f5; }
 
         .empty-state {
             text-align: center;
@@ -293,7 +281,7 @@
         }
         .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
 
-        /* ===== 消息模块样式 ===== */
+        /* ===== 消息样式 ===== */
         .chat-container {
             background: white;
             border-radius: 16px;
@@ -386,13 +374,6 @@
             color: #bbb;
             flex-shrink: 0;
         }
-        .chat-user-item .unread-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #e53935;
-            flex-shrink: 0;
-        }
 
         .chat-main {
             flex: 1;
@@ -411,12 +392,6 @@
             font-weight: 600;
             color: #333;
             font-size: 15px;
-        }
-        .chat-main .chat-header .chat-partner .role-tag {
-            font-weight: normal;
-            font-size: 12px;
-            color: #999;
-            margin-left: 6px;
         }
         .chat-messages {
             flex: 1;
@@ -491,7 +466,6 @@
             cursor: not-allowed;
         }
 
-        /* ===== 消息提示 ===== */
         .msg {
             padding: 12px 18px;
             border-radius: 8px;
@@ -500,9 +474,7 @@
         }
         .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
         .msg-error { background: #fce4ec; color: #c62828; display: block; }
-        .msg-info { background: #e3f2fd; color: #1565c0; display: block; }
 
-        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
             .header h1 { font-size: 18px; }
@@ -530,7 +502,6 @@
 </head>
 <body>
 
-    <!-- ===== 头部 ===== -->
     <div class="header">
         <h1>📚 学生端 - 心理咨询预约</h1>
         <div class="header-actions">
@@ -543,13 +514,11 @@
 
     <div class="container">
 
-        <!-- ===== 欢迎横幅 ===== -->
         <div class="welcome-banner">
             <h2 id="welcomeMsg">欢迎回来！</h2>
             <p>在这里你可以预约心理咨询、查看预约记录、与老师在线沟通。</p>
         </div>
 
-        <!-- ===== 统计卡片 ===== -->
         <div class="stats-grid">
             <div class="stat-card pending">
                 <div class="number" id="statPending">0</div>
@@ -569,7 +538,7 @@
             </div>
         </div>
 
-        <!-- ===== Tab 切换 ===== -->
+        <!-- ===== Tab 栏 ===== -->
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('new')">📝 新建预约</button>
             <button class="tab-btn" onclick="switchTab('list')">📋 我的预约</button>
@@ -586,7 +555,6 @@
                 <div id="formMsg" class="msg"></div>
                 <form id="bookingForm" onsubmit="handleBooking(event)">
                     <input type="hidden" id="studentId">
-
                     <div class="form-row">
                         <div class="form-group">
                             <label>姓名 *</label>
@@ -615,7 +583,6 @@
                         <label>班级 *</label>
                         <input type="text" id="studentClass" placeholder="如：高三(1)班" required>
                     </div>
-
                     <div class="form-row">
                         <div class="form-group">
                             <label>预约日期 *</label>
@@ -626,7 +593,6 @@
                             <input type="time" id="bookingTime" required>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label>咨询类型 *</label>
                         <select id="consultationType" required>
@@ -640,19 +606,16 @@
                             <option value="其他">其他</option>
                         </select>
                     </div>
-
                     <div class="form-group">
                         <label>选择老师（可选）</label>
                         <select id="teacherSelect">
                             <option value="">不指定（系统分配）</option>
                         </select>
                     </div>
-
                     <div class="form-group form-full">
                         <label>咨询详情（可选）</label>
                         <textarea id="consultationDetail" placeholder="请简要描述您想咨询的问题..."></textarea>
                     </div>
-
                     <button type="submit" class="btn-submit" id="submitBtn">提交预约</button>
                 </form>
             </div>
@@ -663,18 +626,14 @@
             <div class="booking-list">
                 <h3>📋 我的预约记录</h3>
                 <div id="bookingListContainer">
-                    <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <p>暂无预约记录</p>
-                    </div>
+                    <div class="empty-state"><div class="icon">📭</div><p>暂无预约记录</p></div>
                 </div>
             </div>
         </div>
 
         <!-- ===== Tab: 消息 ===== -->
         <div id="tab-messages" class="tab-content">
-            <div class="chat-container" id="chatContainer">
-                <!-- 左侧联系人列表 -->
+            <div class="chat-container">
                 <div class="chat-sidebar">
                     <div class="sidebar-header">
                         <span>💬 联系人</span>
@@ -684,15 +643,13 @@
                         <div class="empty-state" style="padding:30px 20px;">
                             <div class="icon">📭</div>
                             <p>暂无聊天记录</p>
+                            <p style="font-size:12px;color:#ccc;margin-top:4px;">预约后可以在这里与老师沟通</p>
                         </div>
                     </div>
                 </div>
-
-                <!-- 右侧聊天区域 -->
                 <div class="chat-main">
                     <div class="chat-header">
                         <span class="chat-partner" id="chatPartner">选择联系人开始聊天</span>
-                        <span style="font-size:12px;color:#999;" id="chatPartnerRole"></span>
                     </div>
                     <div class="chat-messages" id="chatMessages">
                         <div class="empty-state" style="padding:40px 20px;">
@@ -711,10 +668,9 @@
     </div>
 
     <script>
-        // ===== 获取当前用户信息 =====
+        // ===== 用户信息 =====
         const userId = localStorage.getItem('user_id') || '';
         const userName = localStorage.getItem('user_name') || '学生';
-        const username = localStorage.getItem('username') || '';
         const userRole = localStorage.getItem('user_role') || 'student';
 
         document.getElementById('userName').textContent = '👤 ' + userName;
@@ -729,7 +685,6 @@
         let pollingInterval = null;
         let msgTabBadge = document.getElementById('tabMsgBadge');
 
-        // ===== 设置默认日期 =====
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('bookingDate').min = today;
         document.getElementById('bookingDate').value = today;
@@ -774,7 +729,6 @@
         // ===== 提交预约 =====
         async function handleBooking(e) {
             e.preventDefault();
-
             const form = document.getElementById('bookingForm');
             const msg = document.getElementById('formMsg');
             const submitBtn = document.getElementById('submitBtn');
@@ -801,28 +755,22 @@
             try {
                 const response = await fetch('/api/bookings', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
                 const result = await response.json();
 
                 if (response.ok && result.success) {
                     msg.className = 'msg msg-success';
                     msg.textContent = '✅ ' + (result.message || '预约提交成功！');
                     msg.style.display = 'block';
-
                     const nameVal = document.getElementById('studentName').value;
                     const idVal = document.getElementById('studentId').value;
                     form.reset();
                     document.getElementById('studentName').value = nameVal;
                     document.getElementById('studentId').value = idVal;
                     document.getElementById('bookingDate').value = today;
-
                     submitBtn.textContent = '✅ 提交成功';
-
                     setTimeout(() => {
                         loadBookings();
                         loadStats();
@@ -831,14 +779,14 @@
                     }, 1500);
                 } else {
                     msg.className = 'msg msg-error';
-                    msg.textContent = '❌ ' + (result.detail || result.message || '提交失败，请重试');
+                    msg.textContent = '❌ ' + (result.detail || result.message || '提交失败');
                     msg.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.textContent = '提交预约';
                 }
             } catch (err) {
                 msg.className = 'msg msg-error';
-                msg.textContent = '❌ 网络错误，请稍后重试';
+                msg.textContent = '❌ 网络错误，请重试';
                 msg.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = '提交预约';
@@ -849,16 +797,11 @@
         async function loadBookings() {
             const container = document.getElementById('bookingListContainer');
             const studentId = localStorage.getItem('user_id');
-
-            if (!studentId) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><p>请先登录</p></div>`;
-                return;
-            }
+            if (!studentId) return;
 
             try {
                 const res = await fetch(`/api/bookings/student/${studentId}`);
                 const data = await res.json();
-
                 if (!data || data.length === 0) {
                     container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无预约记录</p></div>`;
                     return;
@@ -874,27 +817,12 @@
                         '已拒绝': 'badge-rejected'
                     };
                     const badgeClass = statusMap[b.status] || 'badge-pending';
-
-                    let confirmInfo = '';
-                    if (b.status === '已确认' || b.status === '已完成') {
-                        confirmInfo = `
-                            <span class="detail">👨‍🏫 ${b.teacher_name || '待分配'}</span>
-                            <span class="detail">📍 ${b.room || '待定'}</span>
-                            <span class="detail">🕐 ${b.confirmed_date || b.booking_date} ${b.confirmed_time || b.booking_time}</span>
-                        `;
-                    } else {
-                        confirmInfo = `
-                            <span class="detail">📅 ${b.booking_date}</span>
-                            <span class="detail">🕐 ${b.booking_time}</span>
-                            <span class="detail">📋 ${b.consultation_type || '未指定'}</span>
-                        `;
-                    }
-
                     html += `
                         <div class="booking-item">
                             <div class="info">
                                 <span class="date">#${b.queue_number || 'N/A'}</span>
-                                ${confirmInfo}
+                                <span class="detail">📅 ${b.booking_date} 🕐 ${b.booking_time}</span>
+                                <span class="detail">📋 ${b.consultation_type || '未指定'}</span>
                                 <span class="badge ${badgeClass}">${b.status}</span>
                             </div>
                             <div class="actions">
@@ -906,21 +834,16 @@
                         </div>
                     `;
                 });
-
                 container.innerHTML = html;
             } catch (e) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请刷新重试</p></div>`;
                 console.error('加载预约失败', e);
             }
         }
 
-        // ===== 取消预约 =====
         async function cancelBooking(bookingId) {
             if (!confirm('确认取消该预约吗？')) return;
             try {
-                const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
-                    method: 'DELETE'
-                });
+                const res = await fetch(`/api/bookings/${bookingId}/cancel`, { method: 'DELETE' });
                 const data = await res.json();
                 if (data.success) {
                     alert('✅ 已取消预约');
@@ -938,26 +861,20 @@
         async function loadStats() {
             const studentId = localStorage.getItem('user_id');
             if (!studentId) return;
-
             try {
                 const res = await fetch(`/api/bookings/student/${studentId}`);
                 const data = await res.json();
-
                 if (!data || data.length === 0) {
-                    document.getElementById('statPending').textContent = '0';
-                    document.getElementById('statConfirmed').textContent = '0';
-                    document.getElementById('statCompleted').textContent = '0';
-                    document.getElementById('statTotal').textContent = '0';
+                    ['statPending','statConfirmed','statCompleted','statTotal'].forEach(id =>
+                        document.getElementById(id).textContent = '0');
                     return;
                 }
-
                 let pending = 0, confirmed = 0, completed = 0;
                 data.forEach(b => {
                     if (b.status === '待确认') pending++;
                     else if (b.status === '已确认') confirmed++;
                     else if (b.status === '已完成') completed++;
                 });
-
                 document.getElementById('statPending').textContent = pending;
                 document.getElementById('statConfirmed').textContent = confirmed;
                 document.getElementById('statCompleted').textContent = completed;
@@ -973,22 +890,14 @@
                 const res = await fetch(`/api/messages/unread?receiver_id=${userId}`);
                 const data = await res.json();
                 const count = data.unread_count || 0;
-
-                // 更新Tab上的小红点
                 if (count > 0) {
                     msgTabBadge.textContent = count;
                     msgTabBadge.style.display = 'inline-block';
+                    document.getElementById('unreadBadge').textContent = count;
+                    document.getElementById('unreadBadge').style.display = 'inline-block';
                 } else {
                     msgTabBadge.style.display = 'none';
-                }
-
-                // 更新侧边栏未读总数
-                const badge = document.getElementById('unreadBadge');
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
+                    document.getElementById('unreadBadge').style.display = 'none';
                 }
             } catch (e) {
                 console.error('更新未读数量失败:', e);
@@ -1000,15 +909,13 @@
                 const res = await fetch(`/api/messages/chats/${userId}`);
                 const users = await res.json();
                 const container = document.getElementById('chatUserList');
-
-                // 更新未读数量
                 await updateUnreadCount();
 
                 if (!users || users.length === 0) {
                     container.innerHTML = `<div class="empty-state" style="padding:30px 20px;">
                         <div class="icon">📭</div>
                         <p>暂无聊天记录</p>
-                        <p style="font-size:12px;color:#ccc;margin-top:4px;">向老师发起聊天后这里会显示</p>
+                        <p style="font-size:12px;color:#ccc;margin-top:4px;">预约后可以在这里与老师沟通</p>
                     </div>`;
                     return;
                 }
@@ -1019,7 +926,6 @@
                     const avatarClass = u.role === 'teacher' ? 'teacher' : (u.role === 'admin' ? 'admin' : 'student');
                     const roleName = u.role === 'teacher' ? '👨‍🏫 教师' : (u.role === 'admin' ? '⚙️ 管理员' : '🎓 学生');
                     const isActive = currentChatUserId === u.id;
-
                     html += `
                         <div class="chat-user-item ${isActive ? 'active' : ''}" onclick="selectUser('${u.id}', '${u.name}', '${u.role}')">
                             <div class="avatar ${avatarClass}">${avatarLetter}</div>
@@ -1044,11 +950,7 @@
             currentChatUserId = uid;
             currentChatUserName = name;
             currentChatUserRole = role;
-
             document.getElementById('chatPartner').textContent = name;
-            const roleNames = { 'student': '🎓 学生', 'teacher': '👨‍🏫 教师', 'admin': '⚙️ 管理员' };
-            document.getElementById('chatPartnerRole').textContent = roleNames[role] || '';
-
             await loadMessages(uid);
             await loadChatUsers();
         }
@@ -1058,23 +960,16 @@
             try {
                 const res = await fetch(`/api/messages/${userId}/${uid}`);
                 const messages = await res.json();
-
                 if (!messages || messages.length === 0) {
                     container.innerHTML = `<div class="empty-state" style="padding:40px 20px;">
-                        <div class="icon">💬</div>
-                        <p>暂无消息</p>
-                        <p style="font-size:12px;color:#ccc;margin-top:4px;">发送第一条消息吧！</p>
+                        <div class="icon">💬</div><p>暂无消息</p>
                     </div>`;
                     return;
                 }
-
                 let html = '';
                 messages.forEach(m => {
                     const isSent = m.sender_id === userId;
-                    const time = new Date(m.created_at).toLocaleString('zh-CN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
+                    const time = new Date(m.created_at).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' });
                     html += `
                         <div class="message ${isSent ? 'sent' : 'received'}">
                             ${m.content}
@@ -1096,10 +991,8 @@
                 if (!currentChatUserId) alert('请先选择联系人');
                 return;
             }
-
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
-
             try {
                 const data = {
                     sender_id: userId,
@@ -1110,13 +1003,11 @@
                     receiver_role: currentChatUserRole,
                     content: content
                 };
-
                 const res = await fetch('/api/messages/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
                 const result = await res.json();
                 if (result.success) {
                     input.value = '';
@@ -1147,11 +1038,9 @@
         function startPolling() {
             if (pollingInterval) clearInterval(pollingInterval);
             pollingInterval = setInterval(() => {
-                if (currentChatUserId) {
-                    loadMessages(currentChatUserId);
-                }
+                if (currentChatUserId) loadMessages(currentChatUserId);
                 loadChatUsers();
-            }, 3000);
+            }, 5000);
         }
 
         function stopPolling() {
@@ -1161,7 +1050,6 @@
             }
         }
 
-        // ===== 退出登录 =====
         function logout() {
             if (confirm('确认退出登录吗？')) {
                 localStorage.clear();
@@ -1169,7 +1057,7 @@
             }
         }
 
-        // ===== 页面加载时初始化 =====
+        // ===== 初始化 =====
         document.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('token')) {
                 window.location.href = '/student/login';
@@ -1177,10 +1065,7 @@
             }
             loadStats();
             loadBookings();
-
-            // 初始化未读消息数量
             updateUnreadCount();
-            // 每30秒更新一次未读数量
             setInterval(updateUnreadCount, 30000);
         });
     </script>
