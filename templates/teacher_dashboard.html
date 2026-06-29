@@ -234,7 +234,167 @@
         .btn-sm-primary { background: #1a73e8; color: white; }
         .btn-sm-primary:hover { background: #0d47a1; }
 
-        /* ===== 消息样式 ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 35px 40px;
+            max-width: 480px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-box h3 { font-size: 20px; color: #333; margin-bottom: 20px; text-align: center; }
+        .modal-box .form-group { margin-bottom: 14px; }
+        .modal-box .form-group label { display: block; margin-bottom: 4px; color: #333; font-weight: 500; font-size: 13px; }
+        .modal-box .form-group input,
+        .modal-box .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .modal-box .form-group input:focus,
+        .modal-box .form-group select:focus { outline: none; border-color: #2e7d32; }
+        .modal-box .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+        .modal-box .btn-row button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .modal-box .btn-row .btn-confirm { background: #2e7d32; color: white; }
+        .modal-box .btn-row .btn-confirm:hover { background: #1b5e20; }
+        .modal-box .btn-row .btn-cancel { background: #e0e0e0; color: #666; }
+        .modal-box .btn-row .btn-cancel:hover { background: #ccc; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+        .msg {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 14px;
+        }
+        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .msg-error { background: #fce4ec; color: #c62828; display: block; }
+
+        /* 帖子样式 */
+        .post-item {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+        }
+        .post-item:last-child { border-bottom: none; }
+        .post-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+        }
+        .post-content {
+            color: #666;
+            font-size: 13px;
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+        .post-meta {
+            color: #999;
+            font-size: 12px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .post-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .post-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .post-actions .like-btn { color: #1a73e8; }
+        .post-actions .like-btn:hover { background: #e3f2fd; }
+        .post-actions .comment-btn { color: #1a73e8; }
+        .post-actions .comment-btn:hover { background: #e3f2fd; }
+        .post-actions .edit-btn { color: #ff8f00; }
+        .post-actions .edit-btn:hover { background: #fff3e0; }
+        .post-actions .delete-btn { color: #e53935; }
+        .post-actions .delete-btn:hover { background: #fce4ec; }
+
+        .comment-section {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+        }
+        .comment-section.show { display: block; }
+        .comment-item {
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-item .cmt-author { font-weight: 600; color: #333; }
+        .comment-item .cmt-time { font-size: 11px; color: #bbb; margin-left: 6px; }
+        .comment-item .cmt-del {
+            color: #e53935;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .comment-item .cmt-del:hover { text-decoration: underline; }
+        .comment-input-area {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .comment-input-area input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        .comment-input-area input:focus { border-color: #1a73e8; }
+        .comment-input-area button {
+            padding: 6px 16px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .comment-input-area button:hover { background: #0d47a1; }
+
+        /* 聊天样式 */
         .chat-container {
             background: white;
             border-radius: 16px;
@@ -382,8 +542,6 @@
             margin-top: 3px;
             display: block;
         }
-        .chat-messages .message.sent .msg-time { color: rgba(255,255,255,0.8); }
-        .chat-messages .message.received .msg-time { color: #999; }
 
         .chat-input-area {
             padding: 12px 16px;
@@ -418,70 +576,6 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-
-        /* ===== 模态框 ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-box {
-            background: white;
-            border-radius: 16px;
-            padding: 35px 40px;
-            max-width: 480px;
-            width: 95%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: modalIn 0.3s ease;
-        }
-        @keyframes modalIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .modal-box h3 { font-size: 20px; color: #333; margin-bottom: 20px; text-align: center; }
-        .modal-box .form-group { margin-bottom: 14px; }
-        .modal-box .form-group label { display: block; margin-bottom: 4px; color: #333; font-weight: 500; font-size: 13px; }
-        .modal-box .form-group input,
-        .modal-box .form-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        .modal-box .form-group input:focus,
-        .modal-box .form-group select:focus { outline: none; border-color: #2e7d32; }
-        .modal-box .btn-row { display: flex; gap: 10px; margin-top: 18px; }
-        .modal-box .btn-row button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .modal-box .btn-row .btn-confirm { background: #2e7d32; color: white; }
-        .modal-box .btn-row .btn-confirm:hover { background: #1b5e20; }
-        .modal-box .btn-row .btn-cancel { background: #e0e0e0; color: #666; }
-        .modal-box .btn-row .btn-cancel:hover { background: #ccc; }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
-
-        .msg {
-            padding: 10px 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-            font-size: 14px;
-        }
-        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
-        .msg-error { background: #fce4ec; color: #c62828; display: block; }
 
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
@@ -523,7 +617,7 @@
 
         <div class="welcome-banner">
             <h2 id="welcomeMsg">欢迎回来！</h2>
-            <p>在这里你可以查看和管理学生的心理咨询预约，与学生在线沟通。</p>
+            <p>在这里你可以查看和管理学生的心理咨询预约，发布帖子与大家交流。</p>
         </div>
 
         <div class="stats-grid">
@@ -550,10 +644,8 @@
             <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待确认</button>
             <button class="tab-btn" onclick="switchTab('today')">📅 今日预约</button>
             <button class="tab-btn" onclick="switchTab('all')">📋 全部预约</button>
-            <button class="tab-btn" onclick="switchTab('messages')" id="msgTabBtn">
-                💬 消息
-                <span class="tab-badge" id="tabMsgBadge">0</span>
-            </button>
+            <button class="tab-btn" onclick="switchTab('posts')">📝 帖子</button>
+            <button class="tab-btn" onclick="switchTab('messages')">💬 消息</button>
         </div>
 
         <!-- ===== Tab: 待确认 ===== -->
@@ -580,6 +672,43 @@
             </div>
         </div>
 
+        <!-- ===== Tab: 帖子 ===== -->
+        <div id="tab-posts" class="tab-content">
+            <div class="booking-list" style="padding:24px 28px;">
+                <h3>📝 发布帖子</h3>
+                <div id="postMsg" class="msg"></div>
+                <form id="postForm" onsubmit="handleCreatePost(event)">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>标题 *</label>
+                        <input type="text" id="postTitle" placeholder="请输入帖子标题" required style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>内容 *</label>
+                        <textarea id="postContent" placeholder="请输入帖子内容" required style="min-height:100px;width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>分类</label>
+                        <select id="postCategory" style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;">
+                            <option value="心理咨询">心理咨询</option>
+                            <option value="心理健康">心理健康</option>
+                            <option value="学习压力">学习压力</option>
+                            <option value="人际关系">人际关系</option>
+                            <option value="情绪管理">情绪管理</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit" id="postSubmitBtn" style="background:#43a047;width:100%;padding:14px;border:none;border-radius:8px;color:white;font-size:16px;font-weight:600;cursor:pointer;">发布帖子</button>
+                </form>
+            </div>
+
+            <div class="booking-list" style="margin-top:20px;">
+                <h3>📋 帖子列表</h3>
+                <div id="postList">
+                    <div class="empty-state"><div class="icon">📝</div><p>加载中...</p></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== Tab: 消息 ===== -->
         <div id="tab-messages" class="tab-content">
             <div class="chat-container">
@@ -590,9 +719,7 @@
                     </div>
                     <div class="chat-user-list" id="chatUserList">
                         <div class="empty-state" style="padding:30px 20px;">
-                            <div class="icon">📭</div>
-                            <p>暂无聊天记录</p>
-                            <p style="font-size:12px;color:#ccc;margin-top:4px;">学生发起聊天后这里会显示</p>
+                            <div class="icon">📭</div><p>暂无聊天记录</p>
                         </div>
                     </div>
                 </div>
@@ -667,8 +794,6 @@
         let currentChatUserName = '';
         let currentChatUserRole = '';
         let pollingInterval = null;
-        let msgTabBadge = document.getElementById('tabMsgBadge');
-
         const today = new Date().toISOString().split('T')[0];
 
         // ===== Tab 切换 =====
@@ -682,6 +807,7 @@
             if (tab === 'pending') loadPending();
             else if (tab === 'today') loadToday();
             else if (tab === 'all') loadAll();
+            else if (tab === 'posts') loadPosts();
             else if (tab === 'messages') {
                 loadChatUsers();
                 startPolling();
@@ -875,7 +1001,7 @@
                 }
             } catch (e) {
                 modalMsg.className = 'msg msg-error';
-                modalMsg.textContent = '❌ 网络错误，请重试';
+                modalMsg.textContent = '❌ 网络错误';
                 modalMsg.style.display = 'block';
             }
         }
@@ -889,7 +1015,7 @@
                     alert('✅ 已拒绝该预约');
                     loadStats(); loadPending(); loadToday(); loadAll();
                 } else { alert('❌ ' + (data.message || '操作失败')); }
-            } catch (e) { alert('网络错误，请重试'); }
+            } catch (e) { alert('网络错误'); }
         }
 
         async function completeBooking(bookingId) {
@@ -901,41 +1027,246 @@
                     alert('✅ 咨询已完成');
                     loadStats(); loadPending(); loadToday(); loadAll();
                 } else { alert('❌ ' + (data.message || '操作失败')); }
-            } catch (e) { alert('网络错误，请重试'); }
+            } catch (e) { alert('网络错误'); }
+        }
+
+        // ===== 帖子管理 =====
+
+        async function loadPosts() {
+            const container = document.getElementById('postList');
+            try {
+                const res = await fetch('/api/posts');
+                const result = await res.json();
+
+                if (!result.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>`;
+                    return;
+                }
+
+                if (!result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>暂无帖子</p></div>`;
+                    return;
+                }
+
+                let html = '';
+                result.data.forEach(item => {
+                    const time = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
+                    const isOwner = item.author_id === userId;
+                    const commentsHtml = (item.comments || []).map(c =>
+                        `<div class="comment-item">
+                            <span class="cmt-author">${c.author}</span>
+                            <span class="cmt-time">${c.created_at || ''}</span>
+                            <span>：${c.content}</span>
+                            ${c.author_id === userId ? `<button class="cmt-del" onclick="deleteComment('${item._id}','${c.id}')">删除</button>` : ''}
+                        </div>`
+                    ).join('');
+
+                    html += `
+                        <div class="post-item">
+                            <div class="post-title">${item.title}</div>
+                            <div class="post-content">${item.content}</div>
+                            <div class="post-meta">
+                                <span>📂 ${item.category || '未分类'}</span>
+                                <span>👤 ${item.author}</span>
+                                <span>🕐 ${time}</span>
+                                <span>❤️ ${item.likes || 0}</span>
+                                <span>💬 ${item.comments_count || 0}</span>
+                            </div>
+                            <div class="post-actions">
+                                <button class="like-btn" onclick="likePost('${item._id}')">❤️ 点赞</button>
+                                <button class="comment-btn" onclick="toggleComment('${item._id}')">💬 评论</button>
+                                ${isOwner ? `
+                                    <button class="edit-btn" onclick="editPost('${item._id}','${item.title}','${item.content}','${item.category}')">✏️ 修改</button>
+                                    <button class="delete-btn" onclick="deletePost('${item._id}')">🗑️ 删除</button>
+                                ` : ''}
+                            </div>
+                            <div class="comment-section" id="comment-section-${item._id}">
+                                <div id="comment-list-${item._id}">${commentsHtml || '<div style="color:#999;font-size:13px;">暂无评论</div>'}</div>
+                                <div class="comment-input-area">
+                                    <input type="text" id="comment-input-${item._id}" placeholder="写评论..." maxlength="200">
+                                    <button onclick="addComment('${item._id}')">发送</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载帖子失败:', e);
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败</p></div>`;
+            }
+        }
+
+        async function handleCreatePost(e) {
+            e.preventDefault();
+            const msg = document.getElementById('postMsg');
+            const submitBtn = document.getElementById('postSubmitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('postTitle').value.trim());
+            formData.append('content', document.getElementById('postContent').value.trim());
+            formData.append('category', document.getElementById('postCategory').value);
+            formData.append('author', userName);
+            formData.append('author_id', userId);
+
+            try {
+                const res = await fetch('/api/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.display = 'block';
+                    document.getElementById('postForm').reset();
+                    loadPosts();
+                    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + data.message;
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布帖子';
+            }
+        }
+
+        async function likePost(postId) {
+            try {
+                const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadPosts();
+                }
+            } catch (e) {
+                alert('网络错误');
+            }
+        }
+
+        function toggleComment(postId) {
+            const el = document.getElementById(`comment-section-${postId}`);
+            el.classList.toggle('show');
+            if (el.classList.contains('show')) {
+                document.getElementById(`comment-input-${postId}`).focus();
+            }
+        }
+
+        async function addComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const content = input.value.trim();
+            if (!content) return;
+
+            const formData = new FormData();
+            formData.append('comment_author', userName);
+            formData.append('comment_author_id', userId);
+            formData.append('comment_content', content);
+
+            try {
+                const res = await fetch(`/api/posts/${postId}/comment`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    input.value = '';
+                    loadPosts();
+                }
+            } catch (e) {
+                alert('网络错误');
+            }
+        }
+
+        async function deleteComment(postId, commentId) {
+            if (!confirm('确认删除该评论？')) return;
+            try {
+                const res = await fetch(`/api/posts/${postId}/comment/${commentId}?author_id=${userId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadPosts();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (e) {
+                alert('网络错误');
+            }
+        }
+
+        function editPost(postId, title, content, category) {
+            const newTitle = prompt('修改标题：', title);
+            if (newTitle === null) return;
+            const newContent = prompt('修改内容：', content);
+            if (newContent === null) return;
+            const newCategory = prompt('修改分类（心理咨询/心理健康/学习压力/人际关系/情绪管理/其他）：', category);
+            if (newCategory === null) return;
+
+            const formData = new FormData();
+            formData.append('title', newTitle.trim());
+            formData.append('content', newContent.trim());
+            formData.append('category', newCategory.trim());
+            formData.append('author_id', userId);
+
+            fetch(`/api/posts/${postId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ 修改成功');
+                    loadPosts();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(() => alert('网络错误'));
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('确认删除该帖子？')) return;
+            try {
+                const res = await fetch(`/api/posts/${postId}?author_id=${userId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 帖子已删除');
+                    loadPosts();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (e) {
+                alert('网络错误');
+            }
         }
 
         // ===== 消息功能 =====
-        async function updateUnreadCount() {
-            try {
-                const res = await fetch(`/api/messages/unread?receiver_id=${userId}`);
-                const data = await res.json();
-                const count = data.unread_count || 0;
-                if (count > 0) {
-                    msgTabBadge.textContent = count;
-                    msgTabBadge.style.display = 'inline-block';
-                    document.getElementById('unreadBadge').textContent = count;
-                    document.getElementById('unreadBadge').style.display = 'inline-block';
-                } else {
-                    msgTabBadge.style.display = 'none';
-                    document.getElementById('unreadBadge').style.display = 'none';
-                }
-            } catch (e) { console.error('更新未读数量失败:', e); }
-        }
-
         async function loadChatUsers() {
             try {
                 const res = await fetch(`/api/messages/chats/${userId}`);
                 const users = await res.json();
                 const container = document.getElementById('chatUserList');
-                await updateUnreadCount();
                 if (!users || users.length === 0) {
                     container.innerHTML = `<div class="empty-state" style="padding:30px 20px;">
-                        <div class="icon">📭</div>
-                        <p>暂无聊天记录</p>
-                        <p style="font-size:12px;color:#ccc;margin-top:4px;">学生发起聊天后这里会显示</p>
+                        <div class="icon">📭</div><p>暂无聊天记录</p>
                     </div>`;
                     return;
                 }
+
                 let html = '';
                 users.forEach(u => {
                     const avatarLetter = u.name.charAt(0).toUpperCase();
@@ -946,10 +1277,7 @@
                         <div class="chat-user-item ${isActive ? 'active' : ''}" onclick="selectUser('${u.id}', '${u.name}', '${u.role}')">
                             <div class="avatar ${avatarClass}">${avatarLetter}</div>
                             <div class="user-info">
-                                <div>
-                                    <span class="name">${u.name}</span>
-                                    <span class="role-tag">${roleName}</span>
-                                </div>
+                                <div><span class="name">${u.name}</span><span class="role-tag">${roleName}</span></div>
                                 <div class="last-msg">${u.last_message || '暂无消息'}</div>
                             </div>
                             ${u.last_time ? `<div class="user-time">${formatTime(u.last_time)}</div>` : ''}
@@ -957,7 +1285,9 @@
                     `;
                 });
                 container.innerHTML = html;
-            } catch (e) { console.error('加载联系人失败:', e); }
+            } catch (e) {
+                console.error('加载联系人失败:', e);
+            }
         }
 
         async function selectUser(uid, name, role) {
@@ -993,7 +1323,9 @@
                 });
                 container.innerHTML = html;
                 container.scrollTop = container.scrollHeight;
-            } catch (e) { console.error('加载消息失败:', e); }
+            } catch (e) {
+                console.error('加载消息失败:', e);
+            }
         }
 
         async function sendMessage() {
@@ -1025,9 +1357,13 @@
                     input.value = '';
                     await loadMessages(currentChatUserId);
                     await loadChatUsers();
-                } else { alert('发送失败: ' + result.message); }
-            } catch (e) { alert('网络错误，请重试'); }
-            finally { sendBtn.disabled = false; input.focus(); }
+                }
+            } catch (e) {
+                alert('网络错误');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
         }
 
         function formatTime(isoString) {
@@ -1081,8 +1417,7 @@
             }
             loadStats();
             loadPending();
-            updateUnreadCount();
-            setInterval(updateUnreadCount, 30000);
+            loadPosts();
         });
     </script>
 </body>
