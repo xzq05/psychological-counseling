@@ -297,7 +297,6 @@
         .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
         .msg-error { background: #fce4ec; color: #c62828; display: block; }
 
-        /* 帖子样式 */
         .post-item {
             border-bottom: 1px solid #eee;
             padding: 12px 0;
@@ -406,7 +405,6 @@
         }
         .comment-input-area button:hover { background: #0d47a1; }
 
-        /* 聊天样式 */
         .chat-container {
             background: white;
             border-radius: 16px;
@@ -651,7 +649,6 @@
             </div>
         </div>
 
-        <!-- ===== Tab 栏 ===== -->
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待确认</button>
             <button class="tab-btn" onclick="switchTab('today')">📅 今日预约</button>
@@ -660,7 +657,6 @@
             <button class="tab-btn" onclick="switchTab('messages')">💬 消息</button>
         </div>
 
-        <!-- ===== Tab: 待确认 ===== -->
         <div id="tab-pending" class="tab-content active">
             <div class="booking-list">
                 <h3>⏳ 待确认预约 <span class="count" id="pendingCount"></span></h3>
@@ -668,7 +664,6 @@
             </div>
         </div>
 
-        <!-- ===== Tab: 今日预约 ===== -->
         <div id="tab-today" class="tab-content">
             <div class="booking-list">
                 <h3>📅 今日预约 <span class="count" id="todayCount"></span></h3>
@@ -676,7 +671,6 @@
             </div>
         </div>
 
-        <!-- ===== Tab: 全部预约 ===== -->
         <div id="tab-all" class="tab-content">
             <div class="booking-list">
                 <h3>📋 全部预约 <span class="count" id="allCount"></span></h3>
@@ -684,7 +678,6 @@
             </div>
         </div>
 
-        <!-- ===== Tab: 帖子 ===== -->
         <div id="tab-posts" class="tab-content">
             <div class="booking-list" style="padding:24px 28px;">
                 <h3>📝 发布帖子</h3>
@@ -721,7 +714,6 @@
             </div>
         </div>
 
-        <!-- ===== Tab: 消息 ===== -->
         <div id="tab-messages" class="tab-content">
             <div class="chat-container">
                 <div class="chat-sidebar">
@@ -731,7 +723,8 @@
                     </div>
                     <div class="chat-user-list" id="chatUserList">
                         <div class="empty-state" style="padding:30px 20px;">
-                            <div class="icon">📭</div><p>暂无聊天记录</p>
+                            <div class="icon">📭</div>
+                            <p>暂无聊天记录</p>
                         </div>
                     </div>
                 </div>
@@ -755,7 +748,6 @@
 
     </div>
 
-    <!-- ===== 确认预约弹窗 ===== -->
     <div class="modal-overlay" id="confirmModal">
         <div class="modal-box">
             <h3>✅ 确认预约</h3>
@@ -1043,7 +1035,6 @@
         }
 
         // ===== 帖子管理 =====
-
         async function loadPosts() {
             const container = document.getElementById('postList');
             try {
