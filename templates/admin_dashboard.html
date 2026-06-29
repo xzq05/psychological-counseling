@@ -341,6 +341,18 @@
             margin-bottom: 0;
         }
 
+        /* 公告区域样式 */
+        .announcement-form-area {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .announcement-form-area h4 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
             .header h1 { font-size: 18px; }
@@ -508,6 +520,7 @@
             <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
             <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
             <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
+            <button class="tab-btn" onclick="switchTab('announcements')">📢 公告管理</button>
             <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
         </div>
 
@@ -532,6 +545,52 @@
             <div class="table-wrap">
                 <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
                 <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 公告管理 ===== -->
+        <div id="tab-announcements" class="tab-content">
+            <div class="table-wrap">
+                <h3>📢 公告管理</h3>
+
+                <!-- 创建公告表单 -->
+                <div class="announcement-form-area">
+                    <h4>发布新公告</h4>
+                    <div id="announcementMsg" class="msg"></div>
+                    <form id="announcementForm" onsubmit="handleCreateAnnouncement(event)">
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>标题 *</label>
+                                <input type="text" id="annTitle" placeholder="请输入公告标题" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>内容 *</label>
+                                <textarea id="annContent" placeholder="请输入公告内容" required style="min-height:80px;width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>优先级</label>
+                                <select id="annPriority">
+                                    <option value="0">普通</option>
+                                    <option value="1">重要</option>
+                                    <option value="2">紧急</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end; justify-content: flex-end;">
+                                <button type="submit" class="btn-submit" style="background: #ff8f00; padding: 10px 30px; width: auto;" id="annSubmitBtn">发布公告</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 公告列表 -->
+                <h4 style="margin-bottom: 12px; color: #333;">已有公告</h4>
+                <div id="announcementList">
+                    <div class="empty-state"><div class="icon">📢</div><p>加载中...</p></div>
+                </div>
             </div>
         </div>
 
@@ -602,6 +661,7 @@
             if (tab === 'pending') loadPending();
             else if (tab === 'teachers') loadTeachers();
             else if (tab === 'students') loadStudents();
+            else if (tab === 'announcements') loadAnnouncements();
         }
 
         // ===== 折叠创建表单 =====
@@ -1090,6 +1150,148 @@
                 loadStats();
                 loadTeachers();
                 loadPending();
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 公告管理 =====
+
+        // 加载公告列表
+        async function loadAnnouncements() {
+            const container = document.getElementById('announcementList');
+            try {
+                const res = await fetch('/api/admin/announcements');
+                const result = await res.json();
+
+                if (!result.success || !result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无公告</p></div>`;
+                    return;
+                }
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>标题</th>
+                        <th>内容</th>
+                        <th>优先级</th>
+                        <th>作者</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                result.data.forEach(item => {
+                    const priorityMap = {
+                        0: '<span class="badge badge-active">普通</span>',
+                        1: '<span class="badge badge-pending">重要</span>',
+                        2: '<span class="badge badge-inactive" style="background:#fce4ec;color:#c62828;">紧急</span>'
+                    };
+                    const statusText = item.is_active ? '✅ 已发布' : '⏸️ 已禁用';
+                    const statusClass = item.is_active ? 'badge-active' : 'badge-inactive';
+
+                    html += `<tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.content}</td>
+                        <td>${priorityMap[item.priority] || priorityMap[0]}</td>
+                        <td>${item.author || '管理员'}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td class="action-btns">
+                            <button class="btn btn-warning btn-sm" onclick="toggleAnnouncement('${item._id}')">
+                                ${item.is_active ? '⏸️ 禁用' : '▶️ 启用'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement('${item._id}')">🗑️ 删除</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败</p></div>`;
+                console.error('加载公告失败', e);
+            }
+        }
+
+        // 创建公告
+        async function handleCreateAnnouncement(e) {
+            e.preventDefault();
+            const msg = document.getElementById('announcementMsg');
+            const submitBtn = document.getElementById('annSubmitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('annTitle').value.trim());
+            formData.append('content', document.getElementById('annContent').value.trim());
+            formData.append('priority', document.getElementById('annPriority').value);
+            formData.append('author', localStorage.getItem('user_name') || '管理员');
+
+            try {
+                const res = await fetch('/api/admin/announcements', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.display = 'block';
+                    document.getElementById('announcementForm').reset();
+                    loadAnnouncements();
+                    setTimeout(() => {
+                        msg.style.display = 'none';
+                    }, 3000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + data.message;
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布公告';
+            }
+        }
+
+        // 启用/禁用公告
+        async function toggleAnnouncement(annId) {
+            if (!confirm('确认切换公告状态吗？')) return;
+            try {
+                const res = await fetch(`/api/admin/announcements/${annId}/toggle`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    loadAnnouncements();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 删除公告
+        async function deleteAnnouncement(annId) {
+            if (!confirm('⚠️ 确认删除该公告吗？此操作不可恢复！')) return;
+            try {
+                const res = await fetch(`/api/admin/announcements/${annId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 公告已删除');
+                    loadAnnouncements();
+                } else {
+                    alert('❌ ' + data.message);
+                }
             } catch (e) {
                 alert('网络错误，请重试');
             }
