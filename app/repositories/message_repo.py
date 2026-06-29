@@ -7,7 +7,6 @@ import re
 
 
 def is_valid_object_id(id_str):
-    """验证是否为有效的ObjectId"""
     if not id_str:
         return False
     return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
@@ -24,7 +23,6 @@ class MessageRepository:
         return message
 
     async def find_by_users(self, user1_id: str, user2_id: str, limit: int = 50):
-        """获取两个用户之间的聊天记录"""
         cursor = self.collection.find({
             "$or": [
                 {"sender_id": user1_id, "receiver_id": user2_id},
@@ -38,33 +36,13 @@ class MessageRepository:
             messages.append(Message(**doc))
         return list(reversed(messages))
 
-    async def find_by_receiver(self, receiver_id: str, limit: int = 100):
-        """获取用户收到的所有消息"""
-        cursor = self.collection.find({"receiver_id": receiver_id}).sort("created_at", -1).limit(limit)
-        messages = []
-        async for doc in cursor:
-            doc["_id"] = str(doc["_id"])
-            messages.append(Message(**doc))
-        return messages
-
     async def find_unread_count(self, receiver_id: str) -> int:
-        """获取未读消息数量"""
         return await self.collection.count_documents({
             "receiver_id": receiver_id,
             "is_read": False
         })
 
-    async def mark_as_read(self, message_id: str):
-        """标记消息为已读"""
-        if not is_valid_object_id(message_id):
-            return
-        await self.collection.update_one(
-            {"_id": ObjectId(message_id)},
-            {"$set": {"is_read": True, "read_at": datetime.now()}}
-        )
-
     async def mark_all_read(self, receiver_id: str, sender_id: str):
-        """标记与某个用户的所有消息为已读"""
         await self.collection.update_many(
             {
                 "sender_id": sender_id,
@@ -75,7 +53,6 @@ class MessageRepository:
         )
 
     async def get_chat_users(self, user_id: str):
-        """获取与用户聊过天的所有用户列表"""
         pipeline = [
             {
                 "$match": {
@@ -117,7 +94,6 @@ class AnnouncementRepository:
         return announcement
 
     async def find_all_active(self):
-        """获取所有活跃的公告"""
         cursor = self.collection.find({"is_active": True}).sort("priority", -1).sort("created_at", -1)
         announcements = []
         async for doc in cursor:
@@ -126,22 +102,12 @@ class AnnouncementRepository:
         return announcements
 
     async def find_all(self):
-        """获取所有公告"""
         cursor = self.collection.find().sort("created_at", -1)
         announcements = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
             announcements.append(Announcement(**doc))
         return announcements
-
-    async def update(self, announcement_id: str, data: dict):
-        if not is_valid_object_id(announcement_id):
-            return
-        data["updated_at"] = datetime.now()
-        await self.collection.update_one(
-            {"_id": ObjectId(announcement_id)},
-            {"$set": data}
-        )
 
     async def delete(self, announcement_id: str):
         if not is_valid_object_id(announcement_id):

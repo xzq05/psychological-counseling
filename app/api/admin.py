@@ -20,7 +20,6 @@ def get_auth_service():
 
 
 def is_valid_object_id(id_str):
-    """验证是否为有效的ObjectId"""
     if not id_str:
         return False
     return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
@@ -30,14 +29,12 @@ def is_valid_object_id(id_str):
 
 @router.get("/teachers/pending")
 async def get_pending_teachers():
-    """获取待审核的教师列表"""
     service = get_auth_service()
     return await service.get_teachers_pending()
 
 
 @router.post("/teachers/verify")
 async def verify_teacher(user_id: str = Form(...)):
-    """审核通过教师账号"""
     service = get_auth_service()
     result = await service.verify_teacher(user_id)
     if not result["success"]:
@@ -47,7 +44,6 @@ async def verify_teacher(user_id: str = Form(...)):
 
 @router.post("/teachers/reject")
 async def reject_teacher(user_id: str = Form(...)):
-    """拒绝教师注册申请（直接删除账号）"""
     service = get_auth_service()
     result = await service.delete_user(user_id)
     if not result["success"]:
@@ -67,7 +63,6 @@ async def create_teacher(
         teacher_title: str = Form(...),
         teacher_specialty: str = Form(...)
 ):
-    """管理员直接创建教师账号（无需审核）- 含性别"""
     try:
         db = get_db()
         repo = UserRepository(db)
@@ -117,7 +112,6 @@ async def create_student(
         student_class: str = Form(...),
         age: int = Form(...)
 ):
-    """管理员直接创建学生账号"""
     try:
         db = get_db()
         repo = UserRepository(db)
@@ -158,21 +152,18 @@ async def create_student(
 
 @router.get("/teachers")
 async def get_all_teachers():
-    """获取所有教师（包括待审核）"""
     service = get_auth_service()
     return await service.get_all_teachers_full()
 
 
 @router.get("/students")
 async def get_all_students():
-    """获取所有学生"""
     service = get_auth_service()
     return await service.get_all_students()
 
 
 @router.post("/users/{user_id}/enable")
 async def enable_user(user_id: str):
-    """启用用户"""
     try:
         if not is_valid_object_id(user_id):
             return JSONResponse(
@@ -203,7 +194,6 @@ async def enable_user(user_id: str):
 
 @router.post("/users/{user_id}/disable")
 async def disable_user(user_id: str):
-    """禁用用户"""
     try:
         if not is_valid_object_id(user_id):
             return JSONResponse(
@@ -239,7 +229,6 @@ async def disable_user(user_id: str):
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str):
-    """删除用户（永久删除）"""
     try:
         if not is_valid_object_id(user_id):
             return JSONResponse(
@@ -277,7 +266,6 @@ async def delete_user(user_id: str):
 
 @router.delete("/bookings/{booking_id}")
 async def delete_booking(booking_id: str):
-    """删除单个预约记录"""
     try:
         if not is_valid_object_id(booking_id):
             return JSONResponse(
@@ -308,10 +296,8 @@ async def delete_booking(booking_id: str):
 
 @router.delete("/bookings/all")
 async def delete_all_bookings():
-    """删除所有预约记录（慎用）"""
     try:
         db = get_db()
-        # 直接使用 MongoDB 的 delete_many
         result = await db["bookings"].delete_many({})
         return JSONResponse(
             status_code=200,
