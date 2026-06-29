@@ -65,10 +65,23 @@
             padding-bottom: 12px;
             border-bottom: 2px solid #f0f0f0;
         }
+        .post-list .post-count {
+            font-size: 14px;
+            color: #999;
+            font-weight: normal;
+            margin-left: 10px;
+        }
 
         .post-item {
             border-bottom: 1px solid #eee;
             padding: 16px 0;
+            transition: background 0.2s;
+        }
+        .post-item:hover {
+            background: #f8fafc;
+            margin: 0 -10px;
+            padding: 16px 10px;
+            border-radius: 8px;
         }
         .post-item:last-child { border-bottom: none; }
         .post-item .post-title {
@@ -78,6 +91,7 @@
         .post-item .post-title a {
             color: #333;
             text-decoration: none;
+            display: inline-block;
         }
         .post-item .post-title a:hover {
             color: #1a73e8;
@@ -95,6 +109,10 @@
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
+        }
+        .post-item .post-meta .click-hint {
+            color: #1a73e8;
+            font-size: 12px;
         }
 
         .empty-state {
@@ -128,6 +146,7 @@
             .container { padding: 16px 12px; }
             .post-list { padding: 16px; }
             .post-item .post-title { font-size: 15px; }
+            .post-item:hover { margin: 0; padding: 16px 0; }
         }
     </style>
 </head>
@@ -145,8 +164,11 @@
     <div class="container">
         <div class="post-list">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-                <h2>📋 全部帖子</h2>
-                <span style="font-size:14px;color:#999;" id="postCount">加载中...</span>
+                <h2>
+                    📋 全部帖子
+                    <span class="post-count" id="postCount">加载中...</span>
+                </h2>
+                <a href="/" class="btn-back">← 返回首页</a>
             </div>
             <div id="postListContainer">
                 <div class="empty-state"><div class="icon">⏳</div><p>加载中...</p></div>
@@ -191,6 +213,7 @@
                                 <span>🕐 ${time}</span>
                                 <span>❤️ ${item.likes || 0}</span>
                                 <span>💬 ${item.comments_count || 0}</span>
+                                <span class="click-hint">📖 点击标题查看详情</span>
                             </div>
                         </div>
                     `;
