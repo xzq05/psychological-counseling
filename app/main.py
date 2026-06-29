@@ -1,6 +1,7 @@
 # app/main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 from app.database import connect_to_mongo, close_mongo_connection
 from app.utils.redis_client import close_redis_client
@@ -27,6 +28,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# 设置模板
+templates = Jinja2Templates(directory="templates")
+
 static_dir = "static"
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
@@ -35,13 +39,25 @@ if not os.path.exists(static_dir):
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# ===== 注册路由 =====
+# ===== 注册API路由 =====
 app.include_router(auth_router)
 app.include_router(bookings_router)
 app.include_router(admin_router)
 app.include_router(schedules_router)
 app.include_router(messages_router)
-app.include_router(posts_router)  # 添加这一行
+app.include_router(posts_router)
+
+# ===== 页面路由（直接在主应用中注册） =====
+@app.get("/post_detail")
+async def post_detail_page(request: Request, id: str):
+    """帖子详情页面"""
+    return templates.TemplateResponse("post_detail.html", {"request": request, "post_id": id})
+
+
+@app.get("/post_edit")
+async def post_edit_page(request: Request, id: str):
+    """帖子编辑页面"""
+    return templates.TemplateResponse("post_edit.html", {"request": request, "post_id": id})
 
 
 @app.get("/health")
