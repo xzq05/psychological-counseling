@@ -430,7 +430,7 @@ async def toggle_announcement(announcement_id: str):
         )
 
 
-# ========== 帖子管理（所有登录用户可发布） ==========
+# ========== 帖子管理 ==========
 
 @router.get("/posts")
 async def get_all_posts():
@@ -612,7 +612,6 @@ async def delete_post(post_id: str):
 
 @router.delete("/posts/{post_id}/comment/{comment_id}")
 async def delete_comment(post_id: str, comment_id: str):
-    """删除评论"""
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
