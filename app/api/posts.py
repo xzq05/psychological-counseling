@@ -1,13 +1,31 @@
-# app/api/posts.py
-from fastapi import APIRouter, HTTPException, Form, Query
-from fastapi.responses import JSONResponse
+# app/api/posts.py - 添加页面路由
+from fastapi import APIRouter, HTTPException, Form, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from app.database import get_db
 from bson import ObjectId
 import re
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api/posts", tags=["帖子"])
+templates = Jinja2Templates(directory="templates")
 
+
+# ========== 页面路由 ==========
+
+@router.get("/detail", response_class=HTMLResponse)
+async def post_detail_page(request: Request, id: str):
+    """帖子详情页面"""
+    return templates.TemplateResponse("post_detail.html", {"request": request, "post_id": id})
+
+
+@router.get("/edit", response_class=HTMLResponse)
+async def post_edit_page(request: Request, id: str):
+    """帖子编辑页面"""
+    return templates.TemplateResponse("post_edit.html", {"request": request, "post_id": id})
+
+
+# ========== API 路由 ==========
 
 def is_valid_object_id(id_str):
     if not id_str:
@@ -30,8 +48,6 @@ def serialize_doc(doc):
                 doc[key] = str(value)
     return doc
 
-
-# ========== 获取所有帖子 ==========
 
 @router.get("")
 async def get_all_posts():
@@ -80,8 +96,6 @@ async def get_post_detail(post_id: str):
         )
 
 
-# ========== 发布帖子 ==========
-
 @router.post("")
 async def create_post(
         title: str = Form(...),
@@ -119,8 +133,6 @@ async def create_post(
         )
 
 
-# ========== 修改帖子（只能修改自己的） ==========
-
 @router.put("/{post_id}")
 async def update_post(
         post_id: str,
@@ -145,14 +157,12 @@ async def update_post(
                 content={"success": False, "message": "帖子不存在"}
             )
 
-        # Admin不能修改帖子
         if user_role == "admin":
             return JSONResponse(
                 status_code=403,
                 content={"success": False, "message": "管理员不能修改帖子"}
             )
 
-        # 只能修改自己的帖子
         if post.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
@@ -179,8 +189,6 @@ async def update_post(
         )
 
 
-# ========== 删除帖子 ==========
-
 @router.delete("/{post_id}")
 async def delete_post(
         post_id: str,
@@ -202,7 +210,6 @@ async def delete_post(
                 content={"success": False, "message": "帖子不存在"}
             )
 
-        # Admin可以删除任何帖子，其他人只能删除自己的
         if user_role != "admin" and post.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
@@ -220,8 +227,6 @@ async def delete_post(
             content={"success": False, "message": f"删除帖子失败: {str(e)}"}
         )
 
-
-# ========== 点赞（每人每帖只能点赞一次） ==========
 
 @router.post("/{post_id}/like")
 async def like_post(
@@ -245,9 +250,7 @@ async def like_post(
 
         liked_by = post.get("liked_by", [])
 
-        # 检查是否已经点赞
         if user_id in liked_by:
-            # 取消点赞
             await db["posts"].update_one(
                 {"_id": ObjectId(post_id)},
                 {
@@ -261,7 +264,6 @@ async def like_post(
                 content={"success": True, "message": "取消点赞成功", "likes": post.get("likes", 0), "liked": False}
             )
         else:
-            # 添加点赞
             await db["posts"].update_one(
                 {"_id": ObjectId(post_id)},
                 {
@@ -280,8 +282,6 @@ async def like_post(
             content={"success": False, "message": f"操作失败: {str(e)}"}
         )
 
-
-# ========== 评论 ==========
 
 @router.post("/{post_id}/comment")
 async def add_comment(
@@ -331,8 +331,6 @@ async def add_comment(
         )
 
 
-# ========== 删除评论 ==========
-
 @router.delete("/{post_id}/comment/{comment_id}")
 async def delete_comment(
         post_id: str,
@@ -367,7 +365,6 @@ async def delete_comment(
                 content={"success": False, "message": "评论不存在"}
             )
 
-        # Admin可以删除任何评论，其他人只能删除自己的
         if user_role != "admin" and comment_to_delete.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
