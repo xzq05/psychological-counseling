@@ -279,10 +279,32 @@ async def delete_user(user_id: str):
         )
 
 
-# ========== 数据管理 ==========
+# ========== 预约管理 ==========
+
+@router.get("/bookings")
+async def get_all_bookings_admin():
+    """管理员获取所有预约记录"""
+    try:
+        db = get_db()
+        cursor = db["bookings"].find().sort("created_at", -1)
+        bookings = []
+        async for doc in cursor:
+            doc = serialize_doc(doc)
+            bookings.append(doc)
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "data": bookings}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"获取预约失败: {str(e)}"}
+        )
+
 
 @router.delete("/bookings/{booking_id}")
-async def delete_booking(booking_id: str):
+async def delete_booking_admin(booking_id: str):
+    """管理员删除单个预约"""
     try:
         if not is_valid_object_id(booking_id):
             return JSONResponse(
@@ -311,13 +333,17 @@ async def delete_booking(booking_id: str):
 
 
 @router.delete("/bookings/all")
-async def delete_all_bookings():
+async def delete_all_bookings_admin():
+    """管理员删除所有预约记录"""
     try:
         db = get_db()
         result = await db["bookings"].delete_many({})
         return JSONResponse(
             status_code=200,
-            content={"success": True, "message": f"已删除 {result.deleted_count} 条预约记录"}
+            content={
+                "success": True,
+                "message": f"已删除 {result.deleted_count} 条预约记录"
+            }
         )
     except Exception as e:
         return JSONResponse(
@@ -433,7 +459,7 @@ async def toggle_announcement(announcement_id: str):
 # ========== 帖子管理 ==========
 
 @router.get("/posts")
-async def get_all_posts():
+async def get_all_posts_admin():
     try:
         db = get_db()
         cursor = db["posts"].find().sort("created_at", -1)
@@ -452,145 +478,8 @@ async def get_all_posts():
         )
 
 
-@router.post("/posts")
-async def create_post(
-        title: str = Form(...),
-        content: str = Form(...),
-        category: str = Form("其他"),
-        author: str = Form(...)
-):
-    try:
-        db = get_db()
-        post = {
-            "title": title,
-            "content": content,
-            "category": category,
-            "author": author,
-            "likes": 0,
-            "comments": [],
-            "comments_count": 0,
-            "created_at": get_beijing_time(),
-            "updated_at": get_beijing_time()
-        }
-        result = await db["posts"].insert_one(post)
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "message": "帖子发布成功", "id": str(result.inserted_id)}
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"发布帖子失败: {str(e)}"}
-        )
-
-
-@router.post("/posts/{post_id}/like")
-async def like_post(post_id: str):
-    try:
-        if not is_valid_object_id(post_id):
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "无效的帖子ID"}
-            )
-        db = get_db()
-        result = await db["posts"].update_one(
-            {"_id": ObjectId(post_id)},
-            {"$inc": {"likes": 1}}
-        )
-        if result.modified_count == 0:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "帖子不存在"}
-            )
-
-        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "message": "点赞成功", "likes": post.get("likes", 0)}
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"点赞失败: {str(e)}"}
-        )
-
-
-@router.post("/posts/{post_id}/comment")
-async def add_comment(
-        post_id: str,
-        comment_author: str = Form(...),
-        comment_content: str = Form(...)
-):
-    try:
-        if not is_valid_object_id(post_id):
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "无效的帖子ID"}
-            )
-        db = get_db()
-
-        comment = {
-            "id": str(ObjectId()),
-            "author": comment_author,
-            "content": comment_content,
-            "created_at": get_beijing_time().isoformat()
-        }
-
-        result = await db["posts"].update_one(
-            {"_id": ObjectId(post_id)},
-            {
-                "$push": {"comments": comment},
-                "$inc": {"comments_count": 1}
-            }
-        )
-
-        if result.modified_count == 0:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "帖子不存在"}
-            )
-
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "message": "评论成功", "comment": comment}
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"评论失败: {str(e)}"}
-        )
-
-
-@router.get("/posts/{post_id}")
-async def get_post_detail(post_id: str):
-    try:
-        if not is_valid_object_id(post_id):
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "无效的帖子ID"}
-            )
-        db = get_db()
-        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
-        if not post:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "帖子不存在"}
-            )
-        post = serialize_doc(post)
-        post["isLiked"] = False
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "data": post}
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"获取帖子失败: {str(e)}"}
-        )
-
-
 @router.delete("/posts/{post_id}")
-async def delete_post(post_id: str):
+async def delete_post_admin(post_id: str):
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
@@ -610,50 +499,8 @@ async def delete_post(post_id: str):
         )
 
 
-@router.delete("/posts/{post_id}/comment/{comment_id}")
-async def delete_comment(post_id: str, comment_id: str):
-    try:
-        if not is_valid_object_id(post_id):
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "无效的帖子ID"}
-            )
-
-        db = get_db()
-        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
-        if not post:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "帖子不存在"}
-            )
-
-        result = await db["posts"].update_one(
-            {"_id": ObjectId(post_id)},
-            {
-                "$pull": {"comments": {"id": comment_id}},
-                "$inc": {"comments_count": -1}
-            }
-        )
-
-        if result.modified_count == 0:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "评论不存在"}
-            )
-
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "message": "评论已删除"}
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"删除评论失败: {str(e)}"}
-        )
-
-
 @router.delete("/posts/all")
-async def delete_all_posts():
+async def delete_all_posts_admin():
     try:
         db = get_db()
         result = await db["posts"].delete_many({})
@@ -669,7 +516,7 @@ async def delete_all_posts():
 
 
 @router.get("/users/all")
-async def get_all_users():
+async def get_all_users_admin():
     try:
         db = get_db()
         cursor = db["users"].find({"status": "active"}).sort("created_at", -1)

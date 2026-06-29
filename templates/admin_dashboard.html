@@ -352,6 +352,7 @@
             color: #333;
         }
 
+        /* 帖子样式 */
         .post-item {
             border-bottom: 1px solid #f0f0f0;
             padding: 16px 0;
@@ -369,7 +370,6 @@
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
-            align-items: center;
         }
         .post-item .post-content {
             color: #555;
@@ -648,8 +648,8 @@
             <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核教师</button>
             <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
             <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
+            <button class="tab-btn" onclick="switchTab('bookings')">📋 预约管理</button>
             <button class="tab-btn" onclick="switchTab('announcements')">📢 公告管理</button>
-            <button class="tab-btn" onclick="switchTab('posts')">📝 帖子管理</button>
             <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
         </div>
 
@@ -674,6 +674,16 @@
             <div class="table-wrap">
                 <h3>🎓 所有学生 <span class="count" id="studentsCount"></span></h3>
                 <div id="studentList"><div class="empty-state"><div class="icon">📭</div><p>加载中...</p></div></div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 预约管理 ===== -->
+        <div id="tab-bookings" class="tab-content">
+            <div class="table-wrap">
+                <h3>📋 所有预约记录 <span class="count" id="bookingsCount"></span></h3>
+                <div id="bookingsList">
+                    <div class="empty-state"><div class="icon">📋</div><p>加载中...</p></div>
+                </div>
             </div>
         </div>
 
@@ -721,60 +731,18 @@
             </div>
         </div>
 
-        <!-- ===== Tab: 帖子管理 ===== -->
-        <div id="tab-posts" class="tab-content">
-            <div class="table-wrap">
-                <h3>📝 帖子管理</h3>
-
-                <!-- 发布帖子表单 -->
-                <div class="announcement-form-area">
-                    <h4>发布新帖子</h4>
-                    <div id="postMsg" class="msg"></div>
-                    <form id="postForm" onsubmit="handleCreatePost(event)">
-                        <div class="form-row">
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label>标题 *</label>
-                                <input type="text" id="postTitle" placeholder="请输入帖子标题" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label>内容 *</label>
-                                <textarea id="postContent" placeholder="请输入帖子内容" required style="min-height:100px;width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>分类</label>
-                                <select id="postCategory">
-                                    <option value="心理咨询">心理咨询</option>
-                                    <option value="心理健康">心理健康</option>
-                                    <option value="学习压力">学习压力</option>
-                                    <option value="人际关系">人际关系</option>
-                                    <option value="情绪管理">情绪管理</option>
-                                    <option value="其他">其他</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="display: flex; align-items: flex-end; justify-content: flex-end;">
-                                <button type="submit" class="btn-submit" style="background: #1a73e8; padding: 10px 30px; width: auto;" id="postSubmitBtn">发布帖子</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- 帖子列表 -->
-                <h4 style="margin-bottom: 12px; color: #333;">已有帖子</h4>
-                <div id="postList">
-                    <div class="empty-state"><div class="icon">📝</div><p>加载中...</p></div>
-                </div>
-            </div>
-        </div>
-
         <!-- ===== Tab: 数据管理 ===== -->
         <div id="tab-data_manage" class="tab-content">
             <div class="table-wrap">
                 <h3>🗑️ 数据管理</h3>
                 <div style="padding: 10px 0;">
+                    <div class="data-card">
+                        <div class="info">
+                            <strong>📋 删除所有预约记录</strong>
+                            <p>此操作将永久删除所有预约数据，不可恢复！</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteAllBookings()">🗑️ 删除所有预约</button>
+                    </div>
                     <div class="data-card">
                         <div class="info">
                             <strong>👤 删除所有学生账号</strong>
@@ -837,8 +805,8 @@
             if (tab === 'pending') loadPending();
             else if (tab === 'teachers') loadTeachers();
             else if (tab === 'students') loadStudents();
+            else if (tab === 'bookings') loadBookingsAdmin();
             else if (tab === 'announcements') loadAnnouncements();
-            else if (tab === 'posts') loadPosts();
         }
 
         // ===== 折叠创建表单 =====
@@ -1052,6 +1020,88 @@
             }
         }
 
+        // ===== 加载预约管理 =====
+        async function loadBookingsAdmin() {
+            const container = document.getElementById('bookingsList');
+            try {
+                const res = await fetch('/api/admin/bookings');
+                const result = await res.json();
+
+                if (!result.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>`;
+                    return;
+                }
+
+                if (!result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>暂无预约记录</p></div>`;
+                    return;
+                }
+
+                document.getElementById('bookingsCount').textContent = `(${result.data.length} 条)`;
+
+                let html = `<table>
+                    <thead><tr>
+                        <th>学生</th>
+                        <th>班级</th>
+                        <th>日期</th>
+                        <th>时间</th>
+                        <th>类型</th>
+                        <th>老师</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr></thead><tbody>`;
+
+                result.data.forEach(b => {
+                    const statusMap = {
+                        '待确认': 'badge-pending',
+                        '已确认': 'badge-confirmed',
+                        '已完成': 'badge-completed',
+                        '已取消': 'badge-cancelled',
+                        '已拒绝': 'badge-rejected'
+                    };
+                    const badgeClass = statusMap[b.status] || 'badge-pending';
+                    const teacherName = b.teacher_name || '未分配';
+
+                    html += `<tr>
+                        <td><strong>${b.student_name}</strong></td>
+                        <td>${b.student_class || '-'}</td>
+                        <td>${b.booking_date || '-'}</td>
+                        <td>${b.booking_time || '-'}</td>
+                        <td>${b.consultation_type || '-'}</td>
+                        <td>${teacherName}</td>
+                        <td><span class="badge ${badgeClass}">${b.status}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBookingAdmin('${b._id}')">🗑️ 删除</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载预约失败:', e);
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败</p></div>`;
+            }
+        }
+
+        async function deleteBookingAdmin(bookingId) {
+            if (!confirm('⚠️ 确认删除该预约记录吗？此操作不可恢复！')) return;
+            try {
+                const res = await fetch(`/api/admin/bookings/${bookingId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 预约已删除');
+                    loadBookingsAdmin();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
         // ===== 审核通过教师 =====
         async function verifyTeacher(userId) {
             if (!confirm('确认审核通过该教师账号吗？\n通过后教师将可以登录系统。')) return;
@@ -1256,6 +1306,31 @@
             }
         }
 
+        // ===== 删除所有预约 =====
+        async function deleteAllBookings() {
+            if (!confirm('⚠️ 此操作将永久删除所有预约记录，不可恢复！确认继续？')) return;
+            if (!confirm('再次确认：删除所有预约数据？')) return;
+
+            try {
+                const response = await fetch('/api/admin/bookings/all', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ ' + (data.message || '所有预约已删除'));
+                    loadStats();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+                console.error('删除所有预约错误:', e);
+            }
+        }
+
         // ===== 删除所有学生 =====
         async function deleteAllStudents() {
             if (!confirm('⚠️ 此操作将永久删除所有学生账号，不可恢复！确认继续？')) return;
@@ -1319,7 +1394,6 @@
                 const data = await res.json();
                 if (data.success) {
                     alert('✅ ' + (data.message || '所有帖子已删除'));
-                    loadPosts();
                 } else {
                     alert('❌ ' + (data.message || '删除失败'));
                 }
@@ -1486,213 +1560,6 @@
             }
         }
 
-        // ===== 帖子管理 =====
-
-        async function loadPosts() {
-            const container = document.getElementById('postList');
-            try {
-                const res = await fetch('/api/admin/posts');
-                const result = await res.json();
-
-                if (!result.success) {
-                    container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败: ${result.message}</p></div>`;
-                    return;
-                }
-
-                if (!result.data || result.data.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>暂无帖子</p></div>`;
-                    return;
-                }
-
-                let html = '';
-                result.data.forEach(item => {
-                    const time = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
-                    const commentsHtml = (item.comments || []).map(c =>
-                        `<div class="comment-item">
-                            <span class="comment-author">${c.author}</span>
-                            <span class="comment-time">${c.created_at || ''}</span>
-                            <span>：${c.content}</span>
-                        </div>`
-                    ).join('');
-
-                    html += `
-                        <div class="post-item">
-                            <div class="post-title">${item.title}</div>
-                            <div class="post-meta">
-                                <span>📂 ${item.category || '未分类'}</span>
-                                <span>👤 ${item.author || '匿名'}</span>
-                                <span>🕐 ${time}</span>
-                                <span>❤️ ${item.likes || 0} 赞</span>
-                                <span>💬 ${item.comments_count || 0} 评论</span>
-                            </div>
-                            <div class="post-content">${item.content}</div>
-                            <div class="post-actions">
-                                <button class="like-btn ${item.isLiked ? 'liked' : ''}" onclick="likePost('${item._id}', this)">
-                                    ${item.isLiked ? '❤️' : '🤍'} 点赞
-                                </button>
-                                <button class="comment-toggle" onclick="toggleComments('${item._id}')">💬 评论</button>
-                                <button class="delete-btn" onclick="deletePost('${item._id}')">🗑️ 删除</button>
-                            </div>
-                            <div class="comment-section" id="comments-${item._id}">
-                                <div id="comment-list-${item._id}">
-                                    ${commentsHtml}
-                                </div>
-                                <div class="comment-input-area">
-                                    <input type="text" id="comment-input-${item._id}" placeholder="写评论..." maxlength="200">
-                                    <button onclick="addComment('${item._id}')">发送</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-            } catch (e) {
-                console.error('加载帖子失败:', e);
-                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败: ${e.message}</p></div>`;
-            }
-        }
-
-        async function handleCreatePost(e) {
-            e.preventDefault();
-            const msg = document.getElementById('postMsg');
-            const submitBtn = document.getElementById('postSubmitBtn');
-
-            msg.className = 'msg';
-            msg.style.display = 'none';
-            submitBtn.disabled = true;
-            submitBtn.textContent = '发布中...';
-
-            const title = document.getElementById('postTitle').value.trim();
-            const content = document.getElementById('postContent').value.trim();
-            const category = document.getElementById('postCategory').value;
-            const author = localStorage.getItem('user_name') || '管理员';
-
-            if (!title || !content) {
-                msg.className = 'msg msg-error';
-                msg.textContent = '❌ 请填写标题和内容';
-                msg.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = '发布帖子';
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            formData.append('category', category);
-            formData.append('author', author);
-
-            try {
-                const res = await fetch('/api/admin/posts', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    msg.className = 'msg msg-success';
-                    msg.textContent = '✅ ' + data.message;
-                    msg.style.display = 'block';
-                    document.getElementById('postForm').reset();
-                    loadPosts();
-                    setTimeout(() => {
-                        msg.style.display = 'none';
-                    }, 3000);
-                } else {
-                    msg.className = 'msg msg-error';
-                    msg.textContent = '❌ ' + (data.message || '发布失败');
-                    msg.style.display = 'block';
-                }
-            } catch (err) {
-                console.error('创建帖子错误:', err);
-                msg.className = 'msg msg-error';
-                msg.textContent = '❌ 网络错误，请重试';
-                msg.style.display = 'block';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '发布帖子';
-            }
-        }
-
-        function toggleComments(postId) {
-            const section = document.getElementById(`comments-${postId}`);
-            section.classList.toggle('show');
-            if (section.classList.contains('show')) {
-                document.getElementById(`comment-input-${postId}`).focus();
-            }
-        }
-
-        async function likePost(postId, btn) {
-            try {
-                const res = await fetch(`/api/admin/posts/${postId}/like`, {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    btn.classList.toggle('liked');
-                    btn.innerHTML = btn.classList.contains('liked') ? '❤️ 点赞' : '🤍 点赞';
-                    // 更新点赞数
-                    const meta = btn.closest('.post-item').querySelector('.post-meta');
-                    const likeSpan = meta.querySelector('span:nth-child(4)');
-                    likeSpan.textContent = `❤️ ${data.likes} 赞`;
-                } else {
-                    alert('❌ ' + data.message);
-                }
-            } catch (e) {
-                alert('网络错误，请重试');
-            }
-        }
-
-        async function addComment(postId) {
-            const input = document.getElementById(`comment-input-${postId}`);
-            const content = input.value.trim();
-            if (!content) return;
-
-            const author = localStorage.getItem('user_name') || '匿名';
-
-            try {
-                const formData = new FormData();
-                formData.append('comment_author', author);
-                formData.append('comment_content', content);
-
-                const res = await fetch(`/api/admin/posts/${postId}/comment`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    input.value = '';
-                    // 重新加载帖子列表刷新评论
-                    loadPosts();
-                } else {
-                    alert('❌ ' + data.message);
-                }
-            } catch (e) {
-                alert('网络错误，请重试');
-            }
-        }
-
-        async function deletePost(postId) {
-            if (!confirm('⚠️ 确认删除该帖子吗？此操作不可恢复！')) return;
-            try {
-                const res = await fetch(`/api/admin/posts/${postId}`, {
-                    method: 'DELETE'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ 帖子已删除');
-                    loadPosts();
-                } else {
-                    alert('❌ ' + (data.message || '删除失败'));
-                }
-            } catch (e) {
-                console.error('删除帖子错误:', e);
-                alert('网络错误，请重试');
-            }
-        }
-
         // ===== 退出登录 =====
         function logout() {
             if (confirm('确认退出登录吗？')) {
@@ -1715,8 +1582,8 @@
             }
             loadStats();
             loadPending();
+            loadBookingsAdmin();
             loadAnnouncements();
-            loadPosts();
             checkUnreadMessages();
             setInterval(checkUnreadMessages, 30000);
         });
