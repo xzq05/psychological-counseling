@@ -277,7 +277,7 @@ async def delete_user(user_id: str):
 
 @router.delete("/bookings/{booking_id}")
 async def delete_booking(booking_id: str):
-    """删除预约记录"""
+    """删除单个预约记录"""
     try:
         if not is_valid_object_id(booking_id):
             return JSONResponse(
@@ -311,7 +311,7 @@ async def delete_all_bookings():
     """删除所有预约记录（慎用）"""
     try:
         db = get_db()
-        # 直接使用 delete_many
+        # 直接使用 MongoDB 的 delete_many
         result = await db["bookings"].delete_many({})
         return JSONResponse(
             status_code=200,
