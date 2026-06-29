@@ -1,0 +1,334 @@
+<!-- templates/post_edit.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑帖子 - 心理咨询预约系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .header-actions a:hover { background: rgba(255,255,255,0.3); }
+        .header-actions .user-name {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 35px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .card h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover { background: #0d47a1; }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .btn-secondary:hover { background: #ccc; }
+
+        .msg {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 14px;
+        }
+        .msg-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .msg-error { background: #fce4ec; color: #c62828; display: block; }
+        .msg-info { background: #e3f2fd; color: #1565c0; display: block; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; padding: 14px 16px; }
+            .header h1 { font-size: 18px; }
+            .header-actions { justify-content: center; }
+            .container { padding: 16px 12px; }
+            .card { padding: 20px 16px; }
+            .btn-row { flex-direction: column; }
+            .btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>✏️ 编辑帖子</h1>
+        <div class="header-actions">
+            <span class="user-name" id="userName">👤 用户</span>
+            <a href="#" onclick="goBack()">🏠 返回</a>
+            <a href="#" onclick="logout()">🚪 退出</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>📝 修改帖子</h2>
+            <div id="msg" class="msg"></div>
+            <form id="editForm" onsubmit="handleUpdate(event)">
+                <input type="hidden" id="postId">
+                <input type="hidden" id="authorId">
+                <div class="form-group">
+                    <label>标题 *</label>
+                    <input type="text" id="editTitle" placeholder="请输入帖子标题" required>
+                </div>
+                <div class="form-group">
+                    <label>内容 *</label>
+                    <textarea id="editContent" placeholder="请输入帖子内容" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="editCategory">
+                        <option value="心理咨询">心理咨询</option>
+                        <option value="心理健康">心理健康</option>
+                        <option value="学习压力">学习压力</option>
+                        <option value="人际关系">人际关系</option>
+                        <option value="情绪管理">情绪管理</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">保存修改</button>
+                    <button type="button" class="btn btn-secondary" onclick="goBack()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const userId = localStorage.getItem('user_id') || '';
+        const userName = localStorage.getItem('user_name') || '用户';
+        const userRole = localStorage.getItem('user_role') || 'student';
+        document.getElementById('userName').textContent = '👤 ' + userName;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+
+        async function loadPost() {
+            if (!postId) {
+                document.getElementById('msg').className = 'msg msg-error';
+                document.getElementById('msg').textContent = '❌ 帖子ID不存在';
+                document.getElementById('msg').style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/posts/${postId}`);
+                const result = await res.json();
+
+                if (!result.success || !result.data) {
+                    document.getElementById('msg').className = 'msg msg-error';
+                    document.getElementById('msg').textContent = '❌ ' + (result.message || '加载失败');
+                    document.getElementById('msg').style.display = 'block';
+                    return;
+                }
+
+                const post = result.data;
+
+                if (post.author_id !== userId && userRole !== 'admin') {
+                    document.getElementById('msg').className = 'msg msg-error';
+                    document.getElementById('msg').textContent = '❌ 您没有权限编辑此帖子';
+                    document.getElementById('msg').style.display = 'block';
+                    document.getElementById('editForm').style.display = 'none';
+                    return;
+                }
+
+                if (userRole === 'admin') {
+                    document.getElementById('msg').className = 'msg msg-error';
+                    document.getElementById('msg').textContent = '❌ 管理员不能编辑帖子';
+                    document.getElementById('msg').style.display = 'block';
+                    document.getElementById('editForm').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('postId').value = postId;
+                document.getElementById('authorId').value = userId;
+                document.getElementById('editTitle').value = post.title || '';
+                document.getElementById('editContent').value = post.content || '';
+                document.getElementById('editCategory').value = post.category || '其他';
+
+            } catch (e) {
+                document.getElementById('msg').className = 'msg msg-error';
+                document.getElementById('msg').textContent = '❌ 网络错误，请重试';
+                document.getElementById('msg').style.display = 'block';
+                console.error('加载帖子失败:', e);
+            }
+        }
+
+        async function handleUpdate(e) {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            const submitBtn = document.getElementById('submitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '保存中...';
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('editTitle').value.trim());
+            formData.append('content', document.getElementById('editContent').value.trim());
+            formData.append('category', document.getElementById('editCategory').value);
+            formData.append('author_id', userId);
+            formData.append('user_role', userRole);
+
+            try {
+                const res = await fetch(`/api/posts/${postId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.display = 'block';
+                    submitBtn.textContent = '已保存';
+                    setTimeout(() => {
+                        goBack();
+                    }, 1500);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + data.message;
+                    msg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '保存修改';
+                }
+            } catch (e) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请重试';
+                msg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '保存修改';
+            }
+        }
+
+        function goBack() {
+            const role = localStorage.getItem('user_role') || 'student';
+            if (role === 'admin') {
+                window.location.href = '/admin?tab=posts';
+            } else if (role === 'teacher') {
+                window.location.href = '/teacher?tab=posts';
+            } else {
+                window.location.href = '/student?tab=posts';
+            }
+        }
+
+        function logout() {
+            if (confirm('确认退出登录吗？')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/';
+                return;
+            }
+            loadPost();
+        });
+    </script>
+</body>
+</html>

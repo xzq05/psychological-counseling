@@ -28,7 +28,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 设置模板
 templates = Jinja2Templates(directory="templates")
 
 static_dir = "static"
@@ -47,16 +46,14 @@ app.include_router(schedules_router)
 app.include_router(messages_router)
 app.include_router(posts_router)
 
-# ===== 页面路由（直接在主应用中注册） =====
+# ===== 页面路由 =====
 @app.get("/post_detail")
 async def post_detail_page(request: Request, id: str):
-    """帖子详情页面"""
     return templates.TemplateResponse("post_detail.html", {"request": request, "post_id": id})
 
 
 @app.get("/post_edit")
 async def post_edit_page(request: Request, id: str):
-    """帖子编辑页面"""
     return templates.TemplateResponse("post_edit.html", {"request": request, "post_id": id})
 
 
