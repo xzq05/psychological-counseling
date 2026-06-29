@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.database import connect_to_mongo, close_mongo_connection
 from app.utils.redis_client import close_redis_client
-from app.api import auth_router, bookings_router, admin_router, schedules_router
+from app.api import auth_router, bookings_router, admin_router, schedules_router, messages_router
 import os
 
 
@@ -43,6 +43,7 @@ app.include_router(auth_router)
 app.include_router(bookings_router)
 app.include_router(admin_router)
 app.include_router(schedules_router)
+app.include_router(messages_router)  # 添加这行
 
 
 # ===== 健康检查端点 =====
