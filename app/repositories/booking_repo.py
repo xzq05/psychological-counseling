@@ -99,11 +99,13 @@ class BookingRepository:
         )
 
     async def delete_permanently(self, booking_id: str):
+        """永久删除单个预约"""
         if not is_valid_object_id(booking_id):
             return
         await self.collection.delete_one({"_id": ObjectId(booking_id)})
 
     async def delete_all(self):
+        """删除所有预约"""
         await self.collection.delete_many({})
 
     async def get_today_queue_count(self, date_str: str) -> int:
