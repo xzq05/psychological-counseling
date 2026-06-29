@@ -16,8 +16,8 @@ class Post(BaseModel):
     content: str
     category: str = "其他"
     author: str
-    images: List[str] = []  # 图片URL列表
     likes: int = 0
+    comments: List[dict] = []
     comments_count: int = 0
 
     created_at: datetime = Field(default_factory=get_beijing_time)
