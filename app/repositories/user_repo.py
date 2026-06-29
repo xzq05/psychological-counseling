@@ -2,12 +2,15 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 from app.models.user import User
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 
+def get_beijing_time():
+    return datetime.utcnow() + timedelta(hours=8)
+
+
 def is_valid_object_id(id_str):
-    """验证是否为有效的ObjectId"""
     if not id_str:
         return False
     return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
@@ -49,7 +52,6 @@ class UserRepository:
         return users
 
     async def find_teachers_pending(self):
-        """查找待审核的教师账号"""
         cursor = self.collection.find({
             "role": "teacher",
             "$or": [
@@ -67,7 +69,6 @@ class UserRepository:
         return users
 
     async def find_all_students(self):
-        """查找所有学生"""
         cursor = self.collection.find({"role": "student"})
         users = []
         async for doc in cursor:
@@ -76,7 +77,6 @@ class UserRepository:
         return users
 
     async def find_all_teachers(self):
-        """查找所有教师（包括待审核的）"""
         cursor = self.collection.find({"role": "teacher"})
         users = []
         async for doc in cursor:
@@ -95,6 +95,8 @@ class UserRepository:
     async def create(self, user: User):
         data = user.model_dump(by_alias=True, exclude={"id"})
         data = {k: v for k, v in data.items() if v is not None}
+        if 'created_at' not in data or not data['created_at']:
+            data['created_at'] = get_beijing_time()
         result = await self.collection.insert_one(data)
         user.id = str(result.inserted_id)
         return user
@@ -102,29 +104,26 @@ class UserRepository:
     async def update(self, user_id: str, data: dict):
         if not is_valid_object_id(user_id):
             return
-        data["updated_at"] = datetime.now()
+        data["updated_at"] = get_beijing_time()
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": data}
         )
 
     async def delete(self, user_id: str):
-        """软删除（禁用）"""
         if not is_valid_object_id(user_id):
             return
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"status": "inactive", "updated_at": datetime.now()}}
+            {"$set": {"status": "inactive", "updated_at": get_beijing_time()}}
         )
 
     async def delete_permanently(self, user_id: str):
-        """永久删除用户"""
         if not is_valid_object_id(user_id):
             return
         await self.collection.delete_one({"_id": ObjectId(user_id)})
 
     async def verify_teacher(self, user_id: str):
-        """审核通过教师账号"""
         if not is_valid_object_id(user_id):
             return
         await self.collection.update_one(
@@ -132,7 +131,7 @@ class UserRepository:
             {"$set": {
                 "teacher_verified": True,
                 "status": "active",
-                "updated_at": datetime.now()
+                "updated_at": get_beijing_time()
             }}
         )
 

@@ -1,8 +1,13 @@
 # app/models/message.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
+
+
+# 获取东八区时间
+def get_beijing_time():
+    return datetime.utcnow() + timedelta(hours=8)
 
 
 class Message(BaseModel):
@@ -19,7 +24,7 @@ class Message(BaseModel):
     is_read: bool = False
     read_at: Optional[datetime] = None
 
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=get_beijing_time)
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -37,8 +42,8 @@ class Announcement(BaseModel):
     is_active: bool = True
     priority: int = 0
 
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=get_beijing_time)
+    updated_at: datetime = Field(default_factory=get_beijing_time)
 
     model_config = ConfigDict(
         populate_by_name=True,

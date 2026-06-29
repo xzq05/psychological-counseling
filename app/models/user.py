@@ -1,39 +1,39 @@
 # app/models/user.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
 
 
+def get_beijing_time():
+    return datetime.utcnow() + timedelta(hours=8)
+
+
 class User(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
 
-    # 基本信息
     username: str
     password: str
     name: str
     phone: str
-    role: str = "student"  # student / teacher / admin
+    role: str = "student"
 
-    # 学生专属
     student_class: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
 
-    # 教师专属
     teacher_title: Optional[str] = None
     teacher_specialty: Optional[str] = None
-    teacher_verified: bool = False  # 教师账号是否通过审核（默认False）
+    teacher_gender: Optional[str] = None
+    teacher_verified: bool = False
 
-    # 状态
-    status: str = "active"  # active / inactive / pending_verification
+    status: str = "active"
 
-    # 密码重置
     reset_token: Optional[str] = None
     reset_token_expires: Optional[datetime] = None
 
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=get_beijing_time)
+    updated_at: datetime = Field(default_factory=get_beijing_time)
 
     model_config = ConfigDict(
         populate_by_name=True,

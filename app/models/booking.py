@@ -1,14 +1,17 @@
 # app/models/booking.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
 
 
+def get_beijing_time():
+    return datetime.utcnow() + timedelta(hours=8)
+
+
 class Booking(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
 
-    # 学生信息
     student_id: str
     student_name: str
     student_phone: str
@@ -16,25 +19,22 @@ class Booking(BaseModel):
     student_age: int
     student_class: str
 
-    # 预约信息
     booking_date: str
     booking_time: str
     consultation_type: str
     consultation_detail: Optional[str] = None
 
-    # 教师安排
     teacher_id: Optional[str] = None
     teacher_name: Optional[str] = None
     confirmed_date: Optional[str] = None
     confirmed_time: Optional[str] = None
     room: Optional[str] = None
 
-    # 状态
     queue_number: int = 0
     status: str = "待确认"
 
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=get_beijing_time)
+    updated_at: datetime = Field(default_factory=get_beijing_time)
 
     model_config = ConfigDict(
         populate_by_name=True,
