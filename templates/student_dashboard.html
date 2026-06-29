@@ -47,7 +47,6 @@
             font-size: 14px;
         }
 
-        /* ===== 容器 ===== */
         .container {
             max-width: 1100px;
             margin: 0 auto;
@@ -114,12 +113,25 @@
             background: transparent;
             color: #666;
             transition: all 0.3s;
+            position: relative;
         }
         .tab-btn.active {
             background: #1a73e8;
             color: white;
         }
         .tab-btn:hover:not(.active) { background: #f0f4f8; }
+        .tab-btn .tab-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e53935;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: none;
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -281,6 +293,204 @@
         }
         .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
 
+        /* ===== 消息模块样式 ===== */
+        .chat-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            height: 500px;
+            min-height: 400px;
+        }
+        .chat-sidebar {
+            width: 280px;
+            background: #fafafa;
+            border-right: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .chat-sidebar .sidebar-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .chat-sidebar .sidebar-header .badge {
+            background: #e53935;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .chat-user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+        .chat-user-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .chat-user-item:hover { background: #e8f0fe; }
+        .chat-user-item.active { background: #d2e3fc; }
+        .chat-user-item .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .chat-user-item .avatar.teacher { background: #43a047; }
+        .chat-user-item .avatar.student { background: #1a73e8; }
+        .chat-user-item .avatar.admin { background: #ff8f00; }
+        .chat-user-item .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .chat-user-item .user-info .name {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        .chat-user-item .user-info .role-tag {
+            font-size: 11px;
+            color: #999;
+            margin-left: 4px;
+        }
+        .chat-user-item .user-info .last-msg {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-user-item .user-time {
+            font-size: 10px;
+            color: #bbb;
+            flex-shrink: 0;
+        }
+        .chat-user-item .unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e53935;
+            flex-shrink: 0;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-main .chat-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .chat-main .chat-header .chat-partner {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+        .chat-main .chat-header .chat-partner .role-tag {
+            font-weight: normal;
+            font-size: 12px;
+            color: #999;
+            margin-left: 6px;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #f8fafc;
+        }
+        .chat-messages .message {
+            max-width: 75%;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .chat-messages .message.sent {
+            align-self: flex-end;
+            background: #1a73e8;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-messages .message.received {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .chat-messages .message .msg-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 3px;
+            display: block;
+        }
+        .chat-messages .message.sent .msg-time { color: rgba(255,255,255,0.8); }
+        .chat-messages .message.received .msg-time { color: #999; }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 8px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .chat-input-area input:focus { border-color: #1a73e8; }
+        .chat-input-area .btn-send {
+            padding: 8px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .chat-input-area .btn-send:hover { background: #0d47a1; }
+        .chat-input-area .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         /* ===== 消息提示 ===== */
         .msg {
             padding: 12px 18px;
@@ -307,6 +517,10 @@
             .booking-item .actions { justify-content: flex-start; }
             .welcome-banner { padding: 20px; }
             .welcome-banner h2 { font-size: 20px; }
+            .chat-container { flex-direction: column; height: auto; }
+            .chat-sidebar { width: 100%; max-height: 200px; }
+            .chat-main { min-height: 350px; }
+            .chat-messages .message { max-width: 90%; }
         }
         @media (max-width: 400px) {
             .stats-grid { grid-template-columns: 1fr; }
@@ -332,7 +546,7 @@
         <!-- ===== 欢迎横幅 ===== -->
         <div class="welcome-banner">
             <h2 id="welcomeMsg">欢迎回来！</h2>
-            <p>在这里你可以预约心理咨询、查看预约记录和状态。</p>
+            <p>在这里你可以预约心理咨询、查看预约记录、与老师在线沟通。</p>
         </div>
 
         <!-- ===== 统计卡片 ===== -->
@@ -359,6 +573,10 @@
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('new')">📝 新建预约</button>
             <button class="tab-btn" onclick="switchTab('list')">📋 我的预约</button>
+            <button class="tab-btn" onclick="switchTab('messages')" id="msgTabBtn">
+                💬 消息
+                <span class="tab-badge" id="tabMsgBadge">0</span>
+            </button>
         </div>
 
         <!-- ===== Tab: 新建预约 ===== -->
@@ -453,6 +671,43 @@
             </div>
         </div>
 
+        <!-- ===== Tab: 消息 ===== -->
+        <div id="tab-messages" class="tab-content">
+            <div class="chat-container" id="chatContainer">
+                <!-- 左侧联系人列表 -->
+                <div class="chat-sidebar">
+                    <div class="sidebar-header">
+                        <span>💬 联系人</span>
+                        <span class="badge" id="unreadBadge" style="display:none;">0</span>
+                    </div>
+                    <div class="chat-user-list" id="chatUserList">
+                        <div class="empty-state" style="padding:30px 20px;">
+                            <div class="icon">📭</div>
+                            <p>暂无聊天记录</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧聊天区域 -->
+                <div class="chat-main">
+                    <div class="chat-header">
+                        <span class="chat-partner" id="chatPartner">选择联系人开始聊天</span>
+                        <span style="font-size:12px;color:#999;" id="chatPartnerRole"></span>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="empty-state" style="padding:40px 20px;">
+                            <div class="icon">💬</div>
+                            <p>选择左侧联系人开始聊天</p>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="btn-send" id="sendBtn" onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -460,11 +715,19 @@
         const userId = localStorage.getItem('user_id') || '';
         const userName = localStorage.getItem('user_name') || '学生';
         const username = localStorage.getItem('username') || '';
+        const userRole = localStorage.getItem('user_role') || 'student';
 
         document.getElementById('userName').textContent = '👤 ' + userName;
         document.getElementById('welcomeMsg').textContent = '欢迎回来，' + userName + '！';
         document.getElementById('studentId').value = userId;
         document.getElementById('studentName').value = userName;
+
+        // ===== 聊天变量 =====
+        let currentChatUserId = null;
+        let currentChatUserName = '';
+        let currentChatUserRole = '';
+        let pollingInterval = null;
+        let msgTabBadge = document.getElementById('tabMsgBadge');
 
         // ===== 设置默认日期 =====
         const today = new Date().toISOString().split('T')[0];
@@ -500,6 +763,12 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
 
             if (tab === 'list') loadBookings();
+            if (tab === 'messages') {
+                loadChatUsers();
+                startPolling();
+            } else {
+                stopPolling();
+            }
         }
 
         // ===== 提交预约 =====
@@ -515,7 +784,6 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '提交中...';
 
-            // 收集表单数据为 JSON
             const data = {
                 student_id: document.getElementById('studentId').value || userId,
                 student_name: document.getElementById('studentName').value.trim() || userName,
@@ -530,8 +798,6 @@
                 teacher_id: document.getElementById('teacherSelect').value || ''
             };
 
-            console.log('📤 预约数据:', JSON.stringify(data));
-
             try {
                 const response = await fetch('/api/bookings', {
                     method: 'POST',
@@ -542,14 +808,12 @@
                 });
 
                 const result = await response.json();
-                console.log('📥 服务器响应:', result);
 
                 if (response.ok && result.success) {
                     msg.className = 'msg msg-success';
                     msg.textContent = '✅ ' + (result.message || '预约提交成功！');
                     msg.style.display = 'block';
 
-                    // 重置表单（保留姓名和学号）
                     const nameVal = document.getElementById('studentName').value;
                     const idVal = document.getElementById('studentId').value;
                     form.reset();
@@ -573,7 +837,6 @@
                     submitBtn.textContent = '提交预约';
                 }
             } catch (err) {
-                console.error('❌ 网络错误:', err);
                 msg.className = 'msg msg-error';
                 msg.textContent = '❌ 网络错误，请稍后重试';
                 msg.style.display = 'block';
@@ -704,6 +967,200 @@
             }
         }
 
+        // ===== 消息功能 =====
+        async function updateUnreadCount() {
+            try {
+                const res = await fetch(`/api/messages/unread?receiver_id=${userId}`);
+                const data = await res.json();
+                const count = data.unread_count || 0;
+
+                // 更新Tab上的小红点
+                if (count > 0) {
+                    msgTabBadge.textContent = count;
+                    msgTabBadge.style.display = 'inline-block';
+                } else {
+                    msgTabBadge.style.display = 'none';
+                }
+
+                // 更新侧边栏未读总数
+                const badge = document.getElementById('unreadBadge');
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('更新未读数量失败:', e);
+            }
+        }
+
+        async function loadChatUsers() {
+            try {
+                const res = await fetch(`/api/messages/chats/${userId}`);
+                const users = await res.json();
+                const container = document.getElementById('chatUserList');
+
+                // 更新未读数量
+                await updateUnreadCount();
+
+                if (!users || users.length === 0) {
+                    container.innerHTML = `<div class="empty-state" style="padding:30px 20px;">
+                        <div class="icon">📭</div>
+                        <p>暂无聊天记录</p>
+                        <p style="font-size:12px;color:#ccc;margin-top:4px;">向老师发起聊天后这里会显示</p>
+                    </div>`;
+                    return;
+                }
+
+                let html = '';
+                users.forEach(u => {
+                    const avatarLetter = u.name.charAt(0).toUpperCase();
+                    const avatarClass = u.role === 'teacher' ? 'teacher' : (u.role === 'admin' ? 'admin' : 'student');
+                    const roleName = u.role === 'teacher' ? '👨‍🏫 教师' : (u.role === 'admin' ? '⚙️ 管理员' : '🎓 学生');
+                    const isActive = currentChatUserId === u.id;
+
+                    html += `
+                        <div class="chat-user-item ${isActive ? 'active' : ''}" onclick="selectUser('${u.id}', '${u.name}', '${u.role}')">
+                            <div class="avatar ${avatarClass}">${avatarLetter}</div>
+                            <div class="user-info">
+                                <div>
+                                    <span class="name">${u.name}</span>
+                                    <span class="role-tag">${roleName}</span>
+                                </div>
+                                <div class="last-msg">${u.last_message || '暂无消息'}</div>
+                            </div>
+                            ${u.last_time ? `<div class="user-time">${formatTime(u.last_time)}</div>` : ''}
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载联系人失败:', e);
+            }
+        }
+
+        async function selectUser(uid, name, role) {
+            currentChatUserId = uid;
+            currentChatUserName = name;
+            currentChatUserRole = role;
+
+            document.getElementById('chatPartner').textContent = name;
+            const roleNames = { 'student': '🎓 学生', 'teacher': '👨‍🏫 教师', 'admin': '⚙️ 管理员' };
+            document.getElementById('chatPartnerRole').textContent = roleNames[role] || '';
+
+            await loadMessages(uid);
+            await loadChatUsers();
+        }
+
+        async function loadMessages(uid) {
+            const container = document.getElementById('chatMessages');
+            try {
+                const res = await fetch(`/api/messages/${userId}/${uid}`);
+                const messages = await res.json();
+
+                if (!messages || messages.length === 0) {
+                    container.innerHTML = `<div class="empty-state" style="padding:40px 20px;">
+                        <div class="icon">💬</div>
+                        <p>暂无消息</p>
+                        <p style="font-size:12px;color:#ccc;margin-top:4px;">发送第一条消息吧！</p>
+                    </div>`;
+                    return;
+                }
+
+                let html = '';
+                messages.forEach(m => {
+                    const isSent = m.sender_id === userId;
+                    const time = new Date(m.created_at).toLocaleString('zh-CN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    html += `
+                        <div class="message ${isSent ? 'sent' : 'received'}">
+                            ${m.content}
+                            <span class="msg-time">${time}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+            } catch (e) {
+                console.error('加载消息失败:', e);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content || !currentChatUserId) {
+                if (!currentChatUserId) alert('请先选择联系人');
+                return;
+            }
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+
+            try {
+                const data = {
+                    sender_id: userId,
+                    sender_name: userName,
+                    sender_role: userRole,
+                    receiver_id: currentChatUserId,
+                    receiver_name: currentChatUserName,
+                    receiver_role: currentChatUserRole,
+                    content: content
+                };
+
+                const res = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    input.value = '';
+                    await loadMessages(currentChatUserId);
+                    await loadChatUsers();
+                } else {
+                    alert('发送失败: ' + result.message);
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        function formatTime(isoString) {
+            try {
+                const date = new Date(isoString);
+                const now = new Date();
+                if (date.toDateString() === now.toDateString()) {
+                    return date.toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                }
+                return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            } catch { return ''; }
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => {
+                if (currentChatUserId) {
+                    loadMessages(currentChatUserId);
+                }
+                loadChatUsers();
+            }, 3000);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
         // ===== 退出登录 =====
         function logout() {
             if (confirm('确认退出登录吗？')) {
@@ -720,6 +1177,11 @@
             }
             loadStats();
             loadBookings();
+
+            // 初始化未读消息数量
+            updateUnreadCount();
+            // 每30秒更新一次未读数量
+            setInterval(updateUnreadCount, 30000);
         });
     </script>
 </body>
