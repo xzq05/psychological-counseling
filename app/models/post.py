@@ -1,6 +1,6 @@
 # app/models/post.py
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
 
@@ -16,6 +16,7 @@ class Post(BaseModel):
     content: str
     category: str = "其他"
     author: str
+    images: List[str] = []  # 图片URL列表
     likes: int = 0
     comments_count: int = 0
 
