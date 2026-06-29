@@ -352,39 +352,6 @@
             color: #333;
         }
 
-        /* 帖子样式 */
-        .post-item {
-            border-bottom: 1px solid #f0f0f0;
-            padding: 16px 0;
-        }
-        .post-item:last-child { border-bottom: none; }
-        .post-item .post-title {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-        .post-item .post-meta {
-            color: #888;
-            font-size: 13px;
-            margin-top: 4px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .post-item .post-content {
-            color: #555;
-            font-size: 14px;
-            margin-top: 6px;
-            line-height: 1.6;
-        }
-        .post-item .post-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
             .header h1 { font-size: 18px; }
@@ -596,7 +563,44 @@
         <div id="tab-posts" class="tab-content">
             <div class="table-wrap">
                 <h3>📝 帖子管理</h3>
-                <div id="postList">
+
+                <div class="announcement-form-area">
+                    <h4>发布新帖子</h4>
+                    <div id="adminPostMsg" class="msg"></div>
+                    <form id="adminPostForm" onsubmit="handleAdminCreatePost(event)">
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>标题 *</label>
+                                <input type="text" id="adminPostTitle" placeholder="请输入帖子标题" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>内容 *</label>
+                                <textarea id="adminPostContent" placeholder="请输入帖子内容" required style="min-height:100px;width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>分类</label>
+                                <select id="adminPostCategory">
+                                    <option value="心理咨询">心理咨询</option>
+                                    <option value="心理健康">心理健康</option>
+                                    <option value="学习压力">学习压力</option>
+                                    <option value="人际关系">人际关系</option>
+                                    <option value="情绪管理">情绪管理</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end; justify-content: flex-end;">
+                                <button type="submit" class="btn-submit" style="background: #1a73e8; padding: 10px 30px; width: auto;" id="adminPostSubmitBtn">发布帖子</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <h4 style="margin-bottom: 12px; color: #333;">已有帖子</h4>
+                <div id="adminPostList">
                     <div class="empty-state"><div class="icon">📝</div><p>加载中...</p></div>
                 </div>
             </div>
@@ -1006,7 +1010,7 @@
 
         // ===== 加载帖子管理 =====
         async function loadPostsAdmin() {
-            const container = document.getElementById('postList');
+            const container = document.getElementById('adminPostList');
             try {
                 const res = await fetch('/api/admin/posts');
                 const result = await res.json();
@@ -1067,6 +1071,74 @@
                 }
             } catch (e) {
                 alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 管理员发布帖子 =====
+        async function handleAdminCreatePost(e) {
+            e.preventDefault();
+            const msg = document.getElementById('adminPostMsg');
+            const submitBtn = document.getElementById('adminPostSubmitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+
+            const title = document.getElementById('adminPostTitle').value.trim();
+            const content = document.getElementById('adminPostContent').value.trim();
+            const category = document.getElementById('adminPostCategory').value;
+            const author = localStorage.getItem('user_name') || '管理员';
+            const author_id = localStorage.getItem('user_id') || '';
+            const author_role = 'admin';
+
+            if (!title || !content) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 请填写标题和内容';
+                msg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布帖子';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            formData.append('category', category);
+            formData.append('author', author);
+            formData.append('author_id', author_id);
+            formData.append('author_role', author_role);
+
+            try {
+                const res = await fetch('/api/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                console.log('管理员发布帖子响应:', data);
+
+                if (data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.display = 'block';
+                    document.getElementById('adminPostForm').reset();
+                    loadPostsAdmin();
+                    setTimeout(() => {
+                        msg.style.display = 'none';
+                    }, 3000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (data.message || '发布失败');
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('发布帖子错误:', err);
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布帖子';
             }
         }
 
