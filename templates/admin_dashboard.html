@@ -115,12 +115,25 @@
             background: transparent;
             color: #666;
             transition: all 0.3s;
+            position: relative;
         }
         .tab-btn.active {
             background: #ff8f00;
             color: white;
         }
         .tab-btn:hover:not(.active) { background: #f5f5f5; }
+        .tab-btn .tab-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e53935;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: none;
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -299,7 +312,6 @@
         .create-form-body .btn-submit:hover { background: #e65100; }
         .create-form-body .form-full { grid-column: 1 / -1; }
 
-        /* 学生创建表单按钮颜色 */
         .create-form-body.student .btn-submit {
             background: #1a73e8;
         }
@@ -1013,18 +1025,22 @@
             if (!confirm('再次确认：删除所有预约数据？')) return;
 
             try {
-                const res = await fetch('/api/admin/bookings/all', {
-                    method: 'DELETE'
+                const response = await fetch('/api/admin/bookings/all', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
-                const data = await res.json();
+                const data = await response.json();
                 if (data.success) {
-                    alert('✅ 所有预约已删除');
+                    alert('✅ ' + (data.message || '所有预约已删除'));
                     loadStats();
                 } else {
                     alert('❌ ' + (data.message || '删除失败'));
                 }
             } catch (e) {
                 alert('网络错误，请重试');
+                console.error('删除所有预约错误:', e);
             }
         }
 
