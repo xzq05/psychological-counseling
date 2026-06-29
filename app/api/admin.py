@@ -311,11 +311,14 @@ async def delete_all_bookings():
     """删除所有预约记录（慎用）"""
     try:
         db = get_db()
-        repo = BookingRepository(db)
-        await repo.delete_all()
+        # 直接使用 delete_many
+        result = await db["bookings"].delete_many({})
         return JSONResponse(
             status_code=200,
-            content={"success": True, "message": "所有预约已删除"}
+            content={
+                "success": True,
+                "message": f"已删除 {result.deleted_count} 条预约记录"
+            }
         )
     except Exception as e:
         return JSONResponse(
