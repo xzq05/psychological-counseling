@@ -1,4 +1,4 @@
-# app/api/admin.py - 公告部分修复
+# app/api/admin.py - 修复公告和帖子接口
 from fastapi import APIRouter, HTTPException, Form, Query
 from fastapi.responses import JSONResponse
 from app.database import get_db
@@ -7,7 +7,6 @@ from app.repositories.booking_repo import BookingRepository
 from app.services.auth_service import AuthService
 from app.utils.security import hash_password
 from app.models.user import User
-from app.models.message import Message
 from bson import ObjectId
 import re
 from datetime import datetime, timedelta
@@ -29,6 +28,17 @@ def is_valid_object_id(id_str):
 
 def get_beijing_time():
     return datetime.utcnow() + timedelta(hours=8)
+
+
+def serialize_datetime(obj):
+    """递归处理 datetime 对象"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: serialize_datetime(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_datetime(item) for item in obj]
+    return obj
 
 
 # ========== 教师审核 ==========
@@ -321,11 +331,15 @@ async def delete_all_bookings():
 async def get_all_announcements():
     try:
         db = get_db()
-        # 获取所有公告，按创建时间倒序
         cursor = db["announcements"].find().sort("created_at", -1)
         announcements = []
         async for doc in cursor:
+            # 转换 ObjectId 和 datetime
             doc["_id"] = str(doc["_id"])
+            if "created_at" in doc and isinstance(doc["created_at"], datetime):
+                doc["created_at"] = doc["created_at"].isoformat()
+            if "updated_at" in doc and isinstance(doc["updated_at"], datetime):
+                doc["updated_at"] = doc["updated_at"].isoformat()
             announcements.append(doc)
         return JSONResponse(
             status_code=200,
@@ -430,6 +444,10 @@ async def get_all_posts():
         posts = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
+            if "created_at" in doc and isinstance(doc["created_at"], datetime):
+                doc["created_at"] = doc["created_at"].isoformat()
+            if "updated_at" in doc and isinstance(doc["updated_at"], datetime):
+                doc["updated_at"] = doc["updated_at"].isoformat()
             posts.append(doc)
         return JSONResponse(
             status_code=200,
@@ -514,13 +532,14 @@ async def delete_all_posts():
 
 @router.get("/users/all")
 async def get_all_users():
-    """获取所有用户（供Admin发起聊天）"""
     try:
         db = get_db()
         cursor = db["users"].find({"status": "active"}).sort("created_at", -1)
         users = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
+            if "created_at" in doc and isinstance(doc["created_at"], datetime):
+                doc["created_at"] = doc["created_at"].isoformat()
             users.append({
                 "id": doc["_id"],
                 "username": doc.get("username", ""),
