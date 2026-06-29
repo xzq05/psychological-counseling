@@ -16,7 +16,10 @@ class Post(BaseModel):
     content: str
     category: str = "其他"
     author: str
+    author_id: str
+    author_role: str = "student"  # student / teacher / admin
     likes: int = 0
+    liked_by: List[str] = []  # 存储点赞用户的ID
     comments: List[dict] = []
     comments_count: int = 0
 

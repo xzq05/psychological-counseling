@@ -31,6 +31,8 @@ def serialize_doc(doc):
     return doc
 
 
+# ========== 获取所有帖子 ==========
+
 @router.get("")
 async def get_all_posts():
     try:
@@ -78,13 +80,16 @@ async def get_post_detail(post_id: str):
         )
 
 
+# ========== 发布帖子 ==========
+
 @router.post("")
 async def create_post(
         title: str = Form(...),
         content: str = Form(...),
         category: str = Form("其他"),
         author: str = Form(...),
-        author_id: str = Form(...)
+        author_id: str = Form(...),
+        author_role: str = Form("student")
 ):
     try:
         db = get_db()
@@ -94,7 +99,9 @@ async def create_post(
             "category": category,
             "author": author,
             "author_id": author_id,
+            "author_role": author_role,
             "likes": 0,
+            "liked_by": [],
             "comments": [],
             "comments_count": 0,
             "created_at": get_beijing_time(),
@@ -112,13 +119,16 @@ async def create_post(
         )
 
 
+# ========== 修改帖子（只能修改自己的） ==========
+
 @router.put("/{post_id}")
 async def update_post(
         post_id: str,
         title: str = Form(...),
         content: str = Form(...),
         category: str = Form("其他"),
-        author_id: str = Form(...)
+        author_id: str = Form(...),
+        user_role: str = Form("student")
 ):
     try:
         if not is_valid_object_id(post_id):
@@ -135,6 +145,14 @@ async def update_post(
                 content={"success": False, "message": "帖子不存在"}
             )
 
+        # Admin不能修改帖子
+        if user_role == "admin":
+            return JSONResponse(
+                status_code=403,
+                content={"success": False, "message": "管理员不能修改帖子"}
+            )
+
+        # 只能修改自己的帖子
         if post.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
@@ -161,10 +179,13 @@ async def update_post(
         )
 
 
+# ========== 删除帖子 ==========
+
 @router.delete("/{post_id}")
 async def delete_post(
         post_id: str,
-        author_id: str = Query(...)
+        author_id: str = Query(...),
+        user_role: str = Query("student")
 ):
     try:
         if not is_valid_object_id(post_id):
@@ -181,7 +202,8 @@ async def delete_post(
                 content={"success": False, "message": "帖子不存在"}
             )
 
-        if post.get("author_id") != author_id:
+        # Admin可以删除任何帖子，其他人只能删除自己的
+        if user_role != "admin" and post.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
                 content={"success": False, "message": "只能删除自己的帖子"}
@@ -199,35 +221,67 @@ async def delete_post(
         )
 
 
+# ========== 点赞（每人每帖只能点赞一次） ==========
+
 @router.post("/{post_id}/like")
-async def like_post(post_id: str):
+async def like_post(
+        post_id: str,
+        user_id: str = Form(...)
+):
     try:
         if not is_valid_object_id(post_id):
             return JSONResponse(
                 status_code=400,
                 content={"success": False, "message": "无效的帖子ID"}
             )
+
         db = get_db()
-        result = await db["posts"].update_one(
-            {"_id": ObjectId(post_id)},
-            {"$inc": {"likes": 1}}
-        )
-        if result.modified_count == 0:
+        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+        if not post:
             return JSONResponse(
                 status_code=404,
                 content={"success": False, "message": "帖子不存在"}
             )
-        post = await db["posts"].find_one({"_id": ObjectId(post_id)})
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "message": "点赞成功", "likes": post.get("likes", 0)}
-        )
+
+        liked_by = post.get("liked_by", [])
+
+        # 检查是否已经点赞
+        if user_id in liked_by:
+            # 取消点赞
+            await db["posts"].update_one(
+                {"_id": ObjectId(post_id)},
+                {
+                    "$pull": {"liked_by": user_id},
+                    "$inc": {"likes": -1}
+                }
+            )
+            post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+            return JSONResponse(
+                status_code=200,
+                content={"success": True, "message": "取消点赞成功", "likes": post.get("likes", 0), "liked": False}
+            )
+        else:
+            # 添加点赞
+            await db["posts"].update_one(
+                {"_id": ObjectId(post_id)},
+                {
+                    "$push": {"liked_by": user_id},
+                    "$inc": {"likes": 1}
+                }
+            )
+            post = await db["posts"].find_one({"_id": ObjectId(post_id)})
+            return JSONResponse(
+                status_code=200,
+                content={"success": True, "message": "点赞成功", "likes": post.get("likes", 0), "liked": True}
+            )
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"success": False, "message": f"点赞失败: {str(e)}"}
+            content={"success": False, "message": f"操作失败: {str(e)}"}
         )
 
+
+# ========== 评论 ==========
 
 @router.post("/{post_id}/comment")
 async def add_comment(
@@ -277,11 +331,14 @@ async def add_comment(
         )
 
 
+# ========== 删除评论 ==========
+
 @router.delete("/{post_id}/comment/{comment_id}")
 async def delete_comment(
         post_id: str,
         comment_id: str,
-        author_id: str = Query(...)
+        author_id: str = Query(...),
+        user_role: str = Query("student")
 ):
     try:
         if not is_valid_object_id(post_id):
@@ -310,7 +367,8 @@ async def delete_comment(
                 content={"success": False, "message": "评论不存在"}
             )
 
-        if comment_to_delete.get("author_id") != author_id:
+        # Admin可以删除任何评论，其他人只能删除自己的
+        if user_role != "admin" and comment_to_delete.get("author_id") != author_id:
             return JSONResponse(
                 status_code=403,
                 content={"success": False, "message": "只能删除自己的评论"}
