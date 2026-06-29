@@ -24,17 +24,15 @@ class BookingService:
             message_repo = MessageRepository(db)
             user_repo = UserRepository(db)
 
-            # 获取老师信息
             teacher_id = data.get("teacher_id")
             if teacher_id:
                 teacher = await user_repo.find_by_id(teacher_id)
                 if teacher:
-                    # 获取学生信息
                     student = await user_repo.find_by_id(data.get("student_id"))
                     student_name = student.name if student else data.get("student_name", "学生")
 
-                    # 发送系统消息给老师
-                    system_message = Message(
+                    # 发送给老师
+                    teacher_msg = Message(
                         sender_id=data.get("student_id"),
                         sender_name=student_name,
                         sender_role="student",
@@ -48,10 +46,10 @@ class BookingService:
                                 f"请登录系统查看并确认预约。",
                         is_read=False
                     )
-                    await message_repo.create(system_message)
+                    await message_repo.create(teacher_msg)
 
-                    # 同时给学生发一条确认消息
-                    student_message = Message(
+                    # 发送给学生
+                    student_msg = Message(
                         sender_id=teacher_id,
                         sender_name=teacher.name,
                         sender_role="teacher",
@@ -66,7 +64,7 @@ class BookingService:
                                 f"请等待老师确认，确认后可在预约列表中查看详情。",
                         is_read=False
                     )
-                    await message_repo.create(student_message)
+                    await message_repo.create(student_msg)
 
             # 转换为字典并处理 datetime
             result = saved.model_dump()
@@ -141,7 +139,6 @@ class BookingService:
                 booking_id, teacher_id, teacher_name, confirmed_date, confirmed_time, room
             )
 
-            # ===== 发送确认消息给学生 =====
             booking = await self.booking_repo.find_by_id(booking_id)
             if booking:
                 from app.database import get_db
@@ -149,7 +146,8 @@ class BookingService:
                 db = get_db()
                 message_repo = MessageRepository(db)
 
-                message = Message(
+                # 发送确认消息给学生
+                confirm_msg = Message(
                     sender_id=teacher_id,
                     sender_name=teacher_name,
                     sender_role="teacher",
@@ -164,7 +162,7 @@ class BookingService:
                             f"请按时前往咨询室，如有问题请联系老师。",
                     is_read=False
                 )
-                await message_repo.create(message)
+                await message_repo.create(confirm_msg)
 
             return {"success": True, "message": "预约已确认"}
         except Exception as e:

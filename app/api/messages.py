@@ -78,7 +78,12 @@ async def get_chat_users(user_id: str):
             if user:
                 messages = await repo.find_by_users(user_id, uid, limit=1)
                 last_message = messages[0].content if messages else ""
-                last_time = messages[0].created_at.isoformat() if messages else ""
+                last_time = messages[0].created_at if messages else ""
+                # 确保时间是字符串
+                if isinstance(last_time, datetime):
+                    last_time = last_time.isoformat()
+                elif not last_time:
+                    last_time = ""
 
                 users.append({
                     "id": user.id,
@@ -99,7 +104,17 @@ async def get_messages(user1_id: str, user2_id: str, limit: int = 50):
         repo = get_message_repo()
         messages = await repo.find_by_users(user1_id, user2_id, limit)
         await repo.mark_all_read(user1_id, user2_id)
-        return [m.model_dump() for m in messages]
+
+        # 转换为 JSON 可序列化的格式
+        result = []
+        for m in messages:
+            data = m.model_dump()
+            if 'created_at' in data and isinstance(data['created_at'], datetime):
+                data['created_at'] = data['created_at'].isoformat()
+            if 'read_at' in data and data['read_at'] and isinstance(data['read_at'], datetime):
+                data['read_at'] = data['read_at'].isoformat()
+            result.append(data)
+        return result
     except Exception as e:
         return []
 
@@ -118,9 +133,15 @@ async def send_message(request: SendMessageRequest):
             content=request.content
         )
         result = await repo.create(message)
+
+        # 转换返回数据
+        data = result.model_dump()
+        if 'created_at' in data and isinstance(data['created_at'], datetime):
+            data['created_at'] = data['created_at'].isoformat()
+
         return JSONResponse(
             status_code=200,
-            content={"success": True, "message": "消息发送成功", "data": result.model_dump()}
+            content={"success": True, "message": "消息发送成功", "data": data}
         )
     except Exception as e:
         return JSONResponse(

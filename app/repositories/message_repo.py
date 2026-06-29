@@ -18,6 +18,9 @@ class MessageRepository:
 
     async def create(self, message: Message) -> Message:
         data = message.model_dump(by_alias=True, exclude={"id"})
+        # 确保 datetime 字段正确
+        if 'created_at' in data and isinstance(data['created_at'], datetime):
+            data['created_at'] = data['created_at']
         result = await self.collection.insert_one(data)
         message.id = str(result.inserted_id)
         return message
@@ -33,6 +36,9 @@ class MessageRepository:
         messages = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
+            # 转换 datetime
+            if 'created_at' in doc and isinstance(doc['created_at'], datetime):
+                doc['created_at'] = doc['created_at'].isoformat()
             messages.append(Message(**doc))
         return list(reversed(messages))
 
@@ -98,6 +104,10 @@ class AnnouncementRepository:
         announcements = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
+            if 'created_at' in doc and isinstance(doc['created_at'], datetime):
+                doc['created_at'] = doc['created_at'].isoformat()
+            if 'updated_at' in doc and isinstance(doc['updated_at'], datetime):
+                doc['updated_at'] = doc['updated_at'].isoformat()
             announcements.append(Announcement(**doc))
         return announcements
 
@@ -106,6 +116,10 @@ class AnnouncementRepository:
         announcements = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
+            if 'created_at' in doc and isinstance(doc['created_at'], datetime):
+                doc['created_at'] = doc['created_at'].isoformat()
+            if 'updated_at' in doc and isinstance(doc['updated_at'], datetime):
+                doc['updated_at'] = doc['updated_at'].isoformat()
             announcements.append(Announcement(**doc))
         return announcements
 
