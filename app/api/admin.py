@@ -8,6 +8,7 @@ from app.services.auth_service import AuthService
 from app.utils.security import hash_password
 from app.models.user import User
 from bson import ObjectId
+import re
 
 router = APIRouter(prefix="/api/admin", tags=["管理员"])
 
@@ -16,6 +17,13 @@ def get_auth_service():
     db = get_db()
     repo = UserRepository(db)
     return AuthService(repo)
+
+
+def is_valid_object_id(id_str):
+    """验证是否为有效的ObjectId"""
+    if not id_str:
+        return False
+    return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
 
 
 # ========== 教师审核 ==========
@@ -166,6 +174,12 @@ async def get_all_students():
 async def enable_user(user_id: str):
     """启用用户"""
     try:
+        if not is_valid_object_id(user_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的用户ID"}
+            )
+
         db = get_db()
         repo = UserRepository(db)
         user = await repo.find_by_id(user_id)
@@ -191,6 +205,12 @@ async def enable_user(user_id: str):
 async def disable_user(user_id: str):
     """禁用用户"""
     try:
+        if not is_valid_object_id(user_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的用户ID"}
+            )
+
         db = get_db()
         repo = UserRepository(db)
         user = await repo.find_by_id(user_id)
@@ -221,6 +241,12 @@ async def disable_user(user_id: str):
 async def delete_user(user_id: str):
     """删除用户（永久删除）"""
     try:
+        if not is_valid_object_id(user_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的用户ID"}
+            )
+
         db = get_db()
         repo = UserRepository(db)
         user = await repo.find_by_id(user_id)
@@ -253,6 +279,12 @@ async def delete_user(user_id: str):
 async def delete_booking(booking_id: str):
     """删除预约记录"""
     try:
+        if not is_valid_object_id(booking_id):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "无效的预约ID"}
+            )
+
         db = get_db()
         repo = BookingRepository(db)
         booking = await repo.find_by_id(booking_id)

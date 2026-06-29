@@ -3,6 +3,14 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 from app.models.user import User
 from datetime import datetime
+import re
+
+
+def is_valid_object_id(id_str):
+    """验证是否为有效的ObjectId"""
+    if not id_str:
+        return False
+    return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
 
 
 class UserRepository:
@@ -24,6 +32,8 @@ class UserRepository:
         return None
 
     async def find_by_id(self, user_id: str):
+        if not is_valid_object_id(user_id):
+            return None
         doc = await self.collection.find_one({"_id": ObjectId(user_id)})
         if doc:
             doc["_id"] = str(doc["_id"])
@@ -90,6 +100,8 @@ class UserRepository:
         return user
 
     async def update(self, user_id: str, data: dict):
+        if not is_valid_object_id(user_id):
+            return
         data["updated_at"] = datetime.now()
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
@@ -98,6 +110,8 @@ class UserRepository:
 
     async def delete(self, user_id: str):
         """软删除（禁用）"""
+        if not is_valid_object_id(user_id):
+            return
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"status": "inactive", "updated_at": datetime.now()}}
@@ -105,10 +119,14 @@ class UserRepository:
 
     async def delete_permanently(self, user_id: str):
         """永久删除用户"""
+        if not is_valid_object_id(user_id):
+            return
         await self.collection.delete_one({"_id": ObjectId(user_id)})
 
     async def verify_teacher(self, user_id: str):
         """审核通过教师账号"""
+        if not is_valid_object_id(user_id):
+            return
         await self.collection.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {

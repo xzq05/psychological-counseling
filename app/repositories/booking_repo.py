@@ -3,6 +3,14 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
 from app.models.booking import Booking
 from datetime import datetime
+import re
+
+
+def is_valid_object_id(id_str):
+    """验证是否为有效的ObjectId"""
+    if not id_str:
+        return False
+    return bool(re.match(r'^[0-9a-fA-F]{24}$', id_str))
 
 
 class BookingRepository:
@@ -28,6 +36,8 @@ class BookingRepository:
         return bookings
 
     async def find_by_id(self, booking_id: str):
+        if not is_valid_object_id(booking_id):
+            return None
         doc = await self.collection.find_one({"_id": ObjectId(booking_id)})
         if doc:
             doc["_id"] = str(doc["_id"])
@@ -60,6 +70,8 @@ class BookingRepository:
         return bookings
 
     async def update_status(self, booking_id: str, status: str):
+        if not is_valid_object_id(booking_id):
+            return
         await self.collection.update_one(
             {"_id": ObjectId(booking_id)},
             {"$set": {"status": status, "updated_at": datetime.now()}}
@@ -67,6 +79,8 @@ class BookingRepository:
 
     async def confirm_booking(self, booking_id: str, teacher_id: str, teacher_name: str,
                               confirmed_date: str, confirmed_time: str, room: str):
+        if not is_valid_object_id(booking_id):
+            return
         await self.collection.update_one(
             {"_id": ObjectId(booking_id)},
             {"$set": {
@@ -82,6 +96,8 @@ class BookingRepository:
 
     async def delete_permanently(self, booking_id: str):
         """永久删除预约"""
+        if not is_valid_object_id(booking_id):
+            return
         await self.collection.delete_one({"_id": ObjectId(booking_id)})
 
     async def delete_all(self):
