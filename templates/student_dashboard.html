@@ -302,6 +302,15 @@
             font-size: 16px;
             color: #333;
         }
+        .post-title a {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .post-title a:hover {
+            color: #1a73e8;
+            text-decoration: underline;
+        }
         .post-content {
             color: #666;
             font-size: 13px;
@@ -331,12 +340,15 @@
         }
         .post-actions .like-btn { color: #1a73e8; }
         .post-actions .like-btn:hover { background: #e3f2fd; }
+        .post-actions .like-btn.liked { color: #e53935; }
         .post-actions .comment-btn { color: #1a73e8; }
         .post-actions .comment-btn:hover { background: #e3f2fd; }
         .post-actions .edit-btn { color: #ff8f00; }
         .post-actions .edit-btn:hover { background: #fff3e0; }
         .post-actions .delete-btn { color: #e53935; }
         .post-actions .delete-btn:hover { background: #fce4ec; }
+        .post-actions .view-btn { color: #666; }
+        .post-actions .view-btn:hover { background: #f0f0f0; }
 
         .comment-section {
             margin-top: 8px;
@@ -1033,19 +1045,24 @@
                 result.data.forEach(item => {
                     const time = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
                     const isOwner = item.author_id === userId;
+                    const isAdmin = userRole === 'admin';
+                    const isLiked = item.liked_by && item.liked_by.includes(userId);
+
                     const commentsHtml = (item.comments || []).map(c =>
                         `<div class="comment-item">
                             <span class="cmt-author">${c.author}</span>
                             <span class="cmt-time">${c.created_at || ''}</span>
                             <span>：${c.content}</span>
-                            ${c.author_id === userId ? `<button class="cmt-del" onclick="deleteComment('${item._id}','${c.id}')">删除</button>` : ''}
+                            ${(isAdmin || c.author_id === userId) ? `<button class="cmt-del" onclick="deleteComment('${item._id}','${c.id}')">删除</button>` : ''}
                         </div>`
                     ).join('');
 
                     html += `
                         <div class="post-item">
-                            <div class="post-title">${item.title}</div>
-                            <div class="post-content">${item.content}</div>
+                            <div class="post-title">
+                                <a href="/post_detail?id=${item._id}">${item.title}</a>
+                            </div>
+                            <div class="post-content">${item.content.length > 150 ? item.content.substring(0, 150) + '...' : item.content}</div>
                             <div class="post-meta">
                                 <span>📂 ${item.category || '未分类'}</span>
                                 <span>👤 ${item.author}</span>
@@ -1054,10 +1071,14 @@
                                 <span>💬 ${item.comments_count || 0}</span>
                             </div>
                             <div class="post-actions">
-                                <button class="like-btn" onclick="likePost('${item._id}')">❤️ 点赞</button>
+                                <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likePost('${item._id}', this)">${isLiked ? '❤️' : '🤍'} 点赞</button>
                                 <button class="comment-btn" onclick="toggleComment('${item._id}')">💬 评论</button>
+                                <button class="view-btn" onclick="location.href='/post_detail?id=${item._id}'">📖 查看详情</button>
                                 ${isOwner ? `
-                                    <button class="edit-btn" onclick="editPost('${item._id}','${item.title}','${item.content}','${item.category}')">✏️ 修改</button>
+                                    <button class="edit-btn" onclick="location.href='/post_edit?id=${item._id}'">✏️ 修改</button>
+                                    <button class="delete-btn" onclick="deletePost('${item._id}')">🗑️ 删除</button>
+                                ` : ''}
+                                ${isAdmin && !isOwner ? `
                                     <button class="delete-btn" onclick="deletePost('${item._id}')">🗑️ 删除</button>
                                 ` : ''}
                             </div>
@@ -1095,6 +1116,7 @@
             formData.append('category', document.getElementById('postCategory').value);
             formData.append('author', userName);
             formData.append('author_id', userId);
+            formData.append('author_role', userRole);
 
             try {
                 const res = await fetch('/api/posts', {
@@ -1125,9 +1147,15 @@
             }
         }
 
-        async function likePost(postId) {
+        async function likePost(postId, btn) {
             try {
-                const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+                const formData = new FormData();
+                formData.append('user_id', userId);
+
+                const res = await fetch(`/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    body: formData
+                });
                 const data = await res.json();
                 if (data.success) {
                     loadPosts();
@@ -1173,7 +1201,7 @@
         async function deleteComment(postId, commentId) {
             if (!confirm('确认删除该评论？')) return;
             try {
-                const res = await fetch(`/api/posts/${postId}/comment/${commentId}?author_id=${userId}`, {
+                const res = await fetch(`/api/posts/${postId}/comment/${commentId}?author_id=${userId}&user_role=${userRole}`, {
                     method: 'DELETE'
                 });
                 const data = await res.json();
@@ -1187,40 +1215,10 @@
             }
         }
 
-        function editPost(postId, title, content, category) {
-            const newTitle = prompt('修改标题：', title);
-            if (newTitle === null) return;
-            const newContent = prompt('修改内容：', content);
-            if (newContent === null) return;
-            const newCategory = prompt('修改分类（心理咨询/心理健康/学习压力/人际关系/情绪管理/其他）：', category);
-            if (newCategory === null) return;
-
-            const formData = new FormData();
-            formData.append('title', newTitle.trim());
-            formData.append('content', newContent.trim());
-            formData.append('category', newCategory.trim());
-            formData.append('author_id', userId);
-
-            fetch(`/api/posts/${postId}`, {
-                method: 'PUT',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ 修改成功');
-                    loadPosts();
-                } else {
-                    alert('❌ ' + data.message);
-                }
-            })
-            .catch(() => alert('网络错误'));
-        }
-
         async function deletePost(postId) {
             if (!confirm('确认删除该帖子？')) return;
             try {
-                const res = await fetch(`/api/posts/${postId}?author_id=${userId}`, {
+                const res = await fetch(`/api/posts/${postId}?author_id=${userId}&user_role=${userRole}`, {
                     method: 'DELETE'
                 });
                 const data = await res.json();
