@@ -45,6 +45,21 @@
             border-radius: 20px;
             font-size: 14px;
         }
+        .header-actions .msg-btn {
+            background: rgba(255,255,255,0.25);
+            position: relative;
+        }
+        .header-actions .msg-btn .unread-dot {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ff1744;
+            border-radius: 50%;
+            border: 2px solid #ff8f00;
+            display: none;
+        }
 
         .container {
             max-width: 1200px;
@@ -340,6 +355,7 @@
         <h1>⚙️ 管理员后台</h1>
         <div class="header-actions">
             <span class="user-name" id="userName">👤 管理员</span>
+            <a href="/messages" class="msg-btn">💬 消息 <span class="unread-dot" id="msgDot"></span></a>
             <a href="/admin/change-password">🔐 修改密码</a>
             <a href="/">🏠 返回首页</a>
             <a href="#" onclick="logout()">🚪 退出</a>
@@ -348,7 +364,6 @@
 
     <div class="container">
 
-        <!-- ===== 统计卡片 ===== -->
         <div class="stats-grid">
             <div class="stat-card pending">
                 <div class="number" id="statPending">0</div>
@@ -545,6 +560,24 @@
         const userName = localStorage.getItem('user_name') || '管理员';
         const username = localStorage.getItem('username') || '';
         document.getElementById('userName').textContent = '👤 ' + userName;
+
+        // ===== 获取未读消息数量 =====
+        async function checkUnreadMessages() {
+            try {
+                const adminId = localStorage.getItem('user_id') || '';
+                if (!adminId) return;
+                const res = await fetch(`/api/messages/unread?receiver_id=${adminId}`);
+                const data = await res.json();
+                const dot = document.getElementById('msgDot');
+                if (data.unread_count > 0) {
+                    dot.style.display = 'block';
+                } else {
+                    dot.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('检查消息失败:', e);
+            }
+        }
 
         // ===== 切换 Tab =====
         function switchTab(tab) {
@@ -1068,6 +1101,8 @@
             }
             loadStats();
             loadPending();
+            checkUnreadMessages();
+            setInterval(checkUnreadMessages, 30000);
         });
     </script>
 </body>
