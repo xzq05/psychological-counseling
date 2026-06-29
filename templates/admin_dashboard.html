@@ -352,6 +352,45 @@
             color: #333;
         }
 
+        /* 帖子样式 */
+        .post-item {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 16px 0;
+        }
+        .post-item:last-child { border-bottom: none; }
+        .post-item .post-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        .post-item .post-meta {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .post-item .post-content {
+            color: #555;
+            font-size: 14px;
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+        .post-item .post-images {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .post-item .post-images img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+        }
+
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; padding: 14px 16px; }
             .header h1 { font-size: 18px; }
@@ -365,6 +404,8 @@
             .action-btns { flex-direction: column; gap: 4px; }
             .btn-sm { width: 100%; text-align: center; }
             .data-card { flex-direction: column; text-align: center; }
+            .post-item .post-meta { flex-direction: column; gap: 4px; }
+            .post-item .post-images img { max-width: 80px; max-height: 80px; }
         }
         @media (max-width: 400px) {
             .stats-grid { grid-template-columns: 1fr; }
@@ -520,6 +561,7 @@
             <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 教师列表</button>
             <button class="tab-btn" onclick="switchTab('students')">🎓 学生列表</button>
             <button class="tab-btn" onclick="switchTab('announcements')">📢 公告管理</button>
+            <button class="tab-btn" onclick="switchTab('posts')">📝 帖子管理</button>
             <button class="tab-btn" onclick="switchTab('data_manage')">🗑️ 数据管理</button>
         </div>
 
@@ -552,7 +594,6 @@
             <div class="table-wrap">
                 <h3>📢 公告管理</h3>
 
-                <!-- 创建公告表单 -->
                 <div class="announcement-form-area">
                     <h4>发布新公告</h4>
                     <div id="announcementMsg" class="msg"></div>
@@ -585,10 +626,62 @@
                     </form>
                 </div>
 
-                <!-- 公告列表 -->
                 <h4 style="margin-bottom: 12px; color: #333;">已有公告</h4>
                 <div id="announcementList">
                     <div class="empty-state"><div class="icon">📢</div><p>加载中...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Tab: 帖子管理 ===== -->
+        <div id="tab-posts" class="tab-content">
+            <div class="table-wrap">
+                <h3>📝 帖子管理</h3>
+
+                <!-- 发布帖子表单 -->
+                <div class="announcement-form-area">
+                    <h4>发布新帖子</h4>
+                    <div id="postMsg" class="msg"></div>
+                    <form id="postForm" onsubmit="handleCreatePost(event)" enctype="multipart/form-data">
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>标题 *</label>
+                                <input type="text" id="postTitle" placeholder="请输入帖子标题" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>内容 *</label>
+                                <textarea id="postContent" placeholder="请输入帖子内容" required style="min-height:100px;width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>分类</label>
+                                <select id="postCategory">
+                                    <option value="心理咨询">心理咨询</option>
+                                    <option value="心理健康">心理健康</option>
+                                    <option value="学习压力">学习压力</option>
+                                    <option value="人际关系">人际关系</option>
+                                    <option value="情绪管理">情绪管理</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>图片（可多选）</label>
+                                <input type="file" id="postImages" accept="image/*" multiple>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end; justify-content: flex-end;">
+                                <button type="submit" class="btn-submit" style="background: #1a73e8; padding: 10px 30px; width: auto;" id="postSubmitBtn">发布帖子</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 帖子列表 -->
+                <h4 style="margin-bottom: 12px; color: #333;">已有帖子</h4>
+                <div id="postList">
+                    <div class="empty-state"><div class="icon">📝</div><p>加载中...</p></div>
                 </div>
             </div>
         </div>
@@ -618,6 +711,13 @@
                             <p>此操作将永久删除所有教师账号，不可恢复！</p>
                         </div>
                         <button class="btn btn-danger" onclick="deleteAllTeachers()">🗑️ 删除所有教师</button>
+                    </div>
+                    <div class="data-card">
+                        <div class="info">
+                            <strong>📝 删除所有帖子</strong>
+                            <p>此操作将永久删除所有帖子数据，不可恢复！</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteAllPosts()">🗑️ 删除所有帖子</button>
                     </div>
                 </div>
             </div>
@@ -661,6 +761,7 @@
             else if (tab === 'teachers') loadTeachers();
             else if (tab === 'students') loadStudents();
             else if (tab === 'announcements') loadAnnouncements();
+            else if (tab === 'posts') loadPosts();
         }
 
         // ===== 折叠创建表单 =====
@@ -1154,16 +1255,34 @@
             }
         }
 
+        // ===== 删除所有帖子 =====
+        async function deleteAllPosts() {
+            if (!confirm('⚠️ 此操作将永久删除所有帖子，不可恢复！确认继续？')) return;
+            if (!confirm('再次确认：删除所有帖子？')) return;
+
+            try {
+                const res = await fetch('/api/admin/posts/all', {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ ' + (data.message || '所有帖子已删除'));
+                    loadPosts();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        }
+
         // ===== 公告管理 =====
 
-        // 加载公告列表
         async function loadAnnouncements() {
             const container = document.getElementById('announcementList');
             try {
                 const res = await fetch('/api/admin/announcements');
                 const result = await res.json();
-
-                console.log('公告数据:', result);
 
                 if (!result.success) {
                     container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败: ${result.message}</p></div>`;
@@ -1217,7 +1336,6 @@
             }
         }
 
-        // 创建公告
         async function handleCreateAnnouncement(e) {
             e.preventDefault();
             const msg = document.getElementById('announcementMsg');
@@ -1252,7 +1370,6 @@
                     body: formData
                 });
                 const data = await res.json();
-                console.log('创建公告响应:', data);
 
                 if (data.success) {
                     msg.className = 'msg msg-success';
@@ -1279,7 +1396,6 @@
             }
         }
 
-        // 启用/禁用公告
         async function toggleAnnouncement(annId) {
             if (!confirm('确认切换公告状态吗？')) return;
             try {
@@ -1287,7 +1403,6 @@
                     method: 'POST'
                 });
                 const data = await res.json();
-                console.log('切换状态响应:', data);
                 if (data.success) {
                     alert('✅ ' + data.message);
                     loadAnnouncements();
@@ -1300,7 +1415,6 @@
             }
         }
 
-        // 删除公告
         async function deleteAnnouncement(annId) {
             if (!confirm('⚠️ 确认删除该公告吗？此操作不可恢复！')) return;
             try {
@@ -1308,7 +1422,6 @@
                     method: 'DELETE'
                 });
                 const data = await res.json();
-                console.log('删除公告响应:', data);
                 if (data.success) {
                     alert('✅ 公告已删除');
                     loadAnnouncements();
@@ -1317,6 +1430,149 @@
                 }
             } catch (e) {
                 console.error('删除公告错误:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // ===== 帖子管理 =====
+
+        async function loadPosts() {
+            const container = document.getElementById('postList');
+            try {
+                const res = await fetch('/api/admin/posts');
+                const result = await res.json();
+
+                if (!result.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败: ${result.message}</p></div>`;
+                    return;
+                }
+
+                if (!result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>暂无帖子</p></div>`;
+                    return;
+                }
+
+                let html = '';
+                result.data.forEach(item => {
+                    const time = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
+
+                    let imagesHtml = '';
+                    if (item.images && item.images.length > 0) {
+                        imagesHtml = '<div class="post-images">';
+                        item.images.forEach(img => {
+                            imagesHtml += `<img src="${img}" alt="帖子图片">`;
+                        });
+                        imagesHtml += '</div>';
+                    }
+
+                    html += `
+                        <div class="post-item">
+                            <div class="post-title">${item.title}</div>
+                            <div class="post-meta">
+                                <span>📂 ${item.category || '未分类'}</span>
+                                <span>👤 ${item.author || '匿名'}</span>
+                                <span>🕐 ${time}</span>
+                                <span>❤️ ${item.likes || 0} 赞</span>
+                                <span>💬 ${item.comments_count || 0} 评论</span>
+                            </div>
+                            <div class="post-content">${item.content}</div>
+                            ${imagesHtml}
+                            <div style="margin-top:10px;">
+                                <button class="btn btn-danger btn-sm" onclick="deletePost('${item._id}')">🗑️ 删除</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载帖子失败:', e);
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>加载失败: ${e.message}</p></div>`;
+            }
+        }
+
+        async function handleCreatePost(e) {
+            e.preventDefault();
+            const msg = document.getElementById('postMsg');
+            const submitBtn = document.getElementById('postSubmitBtn');
+
+            msg.className = 'msg';
+            msg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const category = document.getElementById('postCategory').value;
+            const author = localStorage.getItem('user_name') || '管理员';
+
+            if (!title || !content) {
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 请填写标题和内容';
+                msg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布帖子';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            formData.append('category', category);
+            formData.append('author', author);
+
+            const files = document.getElementById('postImages').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+
+            try {
+                const res = await fetch('/api/admin/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.className = 'msg msg-success';
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.display = 'block';
+                    document.getElementById('postForm').reset();
+                    loadPosts();
+                    setTimeout(() => {
+                        msg.style.display = 'none';
+                    }, 3000);
+                } else {
+                    msg.className = 'msg msg-error';
+                    msg.textContent = '❌ ' + (data.message || '发布失败');
+                    msg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('创建帖子错误:', err);
+                msg.className = 'msg msg-error';
+                msg.textContent = '❌ 网络错误，请重试';
+                msg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布帖子';
+            }
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('⚠️ 确认删除该帖子吗？此操作不可恢复！')) return;
+            try {
+                const res = await fetch(`/api/admin/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 帖子已删除');
+                    loadPosts();
+                } else {
+                    alert('❌ ' + (data.message || '删除失败'));
+                }
+            } catch (e) {
+                console.error('删除帖子错误:', e);
                 alert('网络错误，请重试');
             }
         }
@@ -1344,6 +1600,7 @@
             loadStats();
             loadPending();
             loadAnnouncements();
+            loadPosts();
             checkUnreadMessages();
             setInterval(checkUnreadMessages, 30000);
         });
