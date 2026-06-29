@@ -29,15 +29,22 @@
         }
 
         .home-logo {
-            font-size: 64px;
-            margin-bottom: 10px;
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+
+        .home-welcome {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 5px;
         }
 
         .home-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2e7d32;
-            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 20px;
         }
 
         .home-subtitle {
@@ -313,8 +320,11 @@
                 font-size: 28px;
                 margin-bottom: 0;
             }
+            .home-welcome {
+                font-size: 22px;
+            }
             .home-title {
-                font-size: 24px;
+                font-size: 16px;
             }
             .announcement-item {
                 flex-wrap: wrap;
@@ -342,8 +352,11 @@
 <body>
     <div class="home-container">
         <div class="home-card">
-            <div class="home-logo">🧠</div>
-            <h1 class="home-title">心理咨询预约系统</h1>
+
+            <!-- ===== 替换为欢迎使用 ===== -->
+            <div class="home-logo">🎉</div>
+            <div class="home-welcome">欢迎使用</div>
+            <div class="home-title">心理咨询预约系统</div>
             <p class="home-subtitle">选择您的角色，开始使用</p>
 
             <div class="login-grid">
@@ -486,7 +499,6 @@
                     return;
                 }
 
-                // 只显示最新3条
                 const posts = result.data.slice(0, 3);
                 let html = '';
                 posts.forEach(item => {
@@ -497,7 +509,6 @@
                         minute: '2-digit'
                     }) : '';
 
-                    // 截取内容
                     const summary = item.content.length > 80 ? item.content.substring(0, 80) + '...' : item.content;
 
                     html += `
@@ -530,7 +541,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadAnnouncements();
             loadHomePosts();
-            // 每60秒刷新
             setInterval(() => {
                 loadAnnouncements();
                 loadHomePosts();
